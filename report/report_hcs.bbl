@@ -1,0 +1,12 @@
+\begin{thebibliography}{1}
+
+\bibitem{seqinr}
+D.~Charif and J.~Lobry, ``Seqin{R} 1.0-2: a contributed package to the {R}
+  project for statistical computing devoted to biological sequences retrieval
+  and analysis.,'' in {\em Structural approaches to sequence evolution:
+  Molecules, networks, populations} (U.~Bastolla, M.~Porto, H.~Roman, and
+  M.~Vendruscolo, eds.), Biological and Medical Physics, Biomedical
+  Engineering, pp.~207--232, New York: Springer Verlag, 2007.
+\newblock {ISBN :} 978-3-540-35305-8.
+
+\end{thebibliography}
