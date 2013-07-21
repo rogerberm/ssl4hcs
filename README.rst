@@ -16,4 +16,4 @@ the current project is to investigate whether and to which extent intelligent co
 combined with semi-supervised learning can reach the accuracy of a human annotator and/or in certain 
 cases substitute it.
 
-ETH Zurich, 2013.
+*ETH Zurich, 2013.*
