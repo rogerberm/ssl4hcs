@@ -2,9 +2,6 @@
 SSL for high-content screen profiling
 =====================================
 
-Label propagation algorithm on similarity graphs
-------------------------------------------------
-
 :Author:       Roger Bermudez-Chacon - CBB Master program (beroger@student.ethz.ch)
 :Supervisor:   Peter Horvath - Institute of Biochemistry (phorvath@ethz.ch)
 
