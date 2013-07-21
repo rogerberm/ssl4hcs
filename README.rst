@@ -2,8 +2,8 @@
 SSL for high-content screen profiling
 =====================================
 
-:Author:       Roger Bermudez-Chacon - CBB Master program (beroger@student.ethz.ch)
-:Supervisor:   Peter Horvath - Institute of Biochemistry (phorvath@ethz.ch)
+:Author:  Roger Bermudez-Chacon - CBB Master program (beroger@student.ethz.ch)
+:Supervisor:  Peter Horvath - Institute of Biochemistry (phorvath@ethz.ch)
 
 Lab rotation project: Semi-supervised learning for phenotypic profiling of high-content screens
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
