@@ -1,8 +1,6 @@
 ssl4hcs
 =======
-
 Semi-supervised learning for phenotypic profiling of high-content screens
--------------------------------------------------------------------------
 
 :Author:  Roger Bermudez-Chacon - CBB Master program (beroger@student.ethz.ch)
 :Supervisor:  Peter Horvath - Institute of Biochemistry (phorvath@ethz.ch)
@@ -16,4 +14,3 @@ combined with semi-supervised learning can reach the accuracy of a human annotat
 cases substitute it.
 
 ETH Zurich, 2013.
-'''''''''''''''''
