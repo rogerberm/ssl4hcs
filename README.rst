@@ -6,6 +6,8 @@ ssl4hcs
 :Author:  Roger Bermudez-Chacon - CBB Master program (beroger@student.ethz.ch)
 :Supervisor:  Peter Horvath - Institute of Biochemistry (phorvath@ethz.ch)
 
+About
+-----
 Recent advancements in high-throughput microscopy and data analysis made possible to perform large 
 scale biological experiments and automatically evaluate them. For the detection of sub-cellular changes 
 caused by different perturbations in the cell (RNAi or drugs) often supervised machine learning (SML) 
