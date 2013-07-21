@@ -1,5 +1,8 @@
-Semi-supervised learning for phenotypic profiling of high-content screens
-=========================================================================
+ 
+=
+
+Semi-supervised learning for high-content screen profiling
+==========================================================
 
 Label propagation algorithm on similarity graphs
 ------------------------------------------------
