@@ -1,12 +1,11 @@
- 
-SSL for high-content screen profiling
-=====================================
+ssl4hcs
+=======
+
+Semi-supervised learning for phenotypic profiling of high-content screens
+-------------------------------------------------------------------------
 
 :Author:  Roger Bermudez-Chacon - CBB Master program (beroger@student.ethz.ch)
 :Supervisor:  Peter Horvath - Institute of Biochemistry (phorvath@ethz.ch)
-
-Lab rotation project: Semi-supervised learning for phenotypic profiling of high-content screens
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Recent advancements in high-throughput microscopy and data analysis made possible to perform large 
 scale biological experiments and automatically evaluate them. For the detection of sub-cellular changes 
@@ -17,3 +16,4 @@ combined with semi-supervised learning can reach the accuracy of a human annotat
 cases substitute it.
 
 ETH Zurich, 2013.
+'''''''''''''''''
