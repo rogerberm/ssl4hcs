@@ -1,6 +1,7 @@
 \RequirePackage[final]{graphicx} % to allow for graphics to show in draft mode
 \documentclass[oneside, a4paper, final]{memoir} % scrreprt | memoir [twocolumn?]
 \usepackage[T1]{fontenc}  % encoding, ligature removal works
+\usepackage{lipsum}
 \usepackage[utf8]{inputenc}
 \usepackage[obeyFinal]{todonotes}
 \usepackage{ifdraft}
@@ -11,8 +12,12 @@
 \newcommand\imglabel[1]{\textbf{\textsf{#1}}}
 \renewcommand{\rmdefault}{ptm}
 
+\setlrmarginsandblock{3cm}{2.5cm}{*}
+\setulmarginsandblock{2.5cm}{2.5cm}{*}
+\checkandfixthelayout
+
 \title{
-	Semi-supervised learning for phenotypic profiling of \mbox{high-content screens\ifdraft{(DRAFT)}{\thanks{This project was held as a Lab Rotation in Computer Science,
+	Semi-supervised learning for phenotypic profiling of \mbox{high-content screens\ifdraft{ (DRAFT)}{\thanks{This project was held as a Lab Rotation in Computer Science,
 			as required by the Master program in Computational Biology and Bioinformatics - ETH Z\"urich}}}}
 \author{
 	\ifdraft{Roger Bermudez-Chacon\\Supervisor: Peter Horvath}
@@ -21,16 +26,9 @@
 }
 \date{\today}
 
-\setlrmarginsandblock{3cm}{2.5cm}{*}
-\setulmarginsandblock{2.5cm}{2.5cm}{*}
-\checkandfixthelayout
-
 \begin{document}
 \maketitle
-\setcounter{secnumdepth}{0}
-%c \part{p1}, \chapter{c1}, \section{s2}, \subsection{ss1}, \subsubsection{sss1}, \paragraph{p1}, \subparagraph{sp1}
-
-\section{Introduction}
+\begin{abstract}
 Recent advancements in high-throughput microscopy and data analysis made possible to perform large 
 scale biological experiments and automatically evaluate them. For the detection of sub-cellular changes 
 caused by different perturbations in the cell (RNAi or drugs) often supervised machine learning (SML) 
@@ -38,18 +36,35 @@ is used. Reliable training of an SML method requires significant effort from a f
 this project is to investigate whether and to which extent intelligent control experiment design 
 combined with semi-supervised learning can reach the accuracy of a human annotator and/or in certain 
 cases substitute it.
+\end{abstract}
+\setcounter{secnumdepth}{0}
+%c \part{p1}, \chapter{c1}, \section{s2}, \subsection{ss1}, \subsubsection{sss1}, \paragraph{p1}, \subparagraph{sp1}
 
-\section{Materials, Tools and Methods}
-[TODO]
+\section{Introduction}
+\lipsum[19]
+
+\section{Method}
+\lipsum[4-5]
+
+
+\section{Data sources, Tools, and Methods}
+\begin{description}
+	\item[Data sources]
+	labeled and unlabeled datasources
+	\item[Tools] weka, numpy, scipy
+	\item[methods] label spreading
+\end{description}
 
 \section{Results}
-[TODO]
+\lipsum[8]\todo{write results}
 
 \section{Discussion}
-[TODO]
+\lipsum[9]\todo{write results}
 
 \section{Conclusions}
-[TODO]
+\todo{fill in conclusions}
+\lipsum[3]
+\nocite{duda2001pattern, chapelle2006semi, hall2009weka}
 
 \bibliographystyle{ieeetr}  % orders by occurrence in the document
 \bibliography{references}

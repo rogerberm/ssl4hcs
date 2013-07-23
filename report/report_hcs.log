@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-2.5-1.40.13 (TeX Live 2013/dev) (format=pdflatex 2013.4.7)  17 JUL 2013 19:06
+This is pdfTeX, Version 3.1415926-2.5-1.40.13 (TeX Live 2013/dev) (format=pdflatex 2013.4.7)  23 JUL 2013 10:00
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -380,6 +380,10 @@ Package: fontenc 2005/09/27 v1.99g Standard LaTeX package
 File: t1enc.def 2005/09/27 v1.99g Standard LaTeX file
 LaTeX Font Info:    Redeclaring font encoding T1 on input line 43.
 ))
+(/home/roger/texmf/tex/latex/lipsum/lipsum.sty
+Package: lipsum 2011/04/14 v1.2 150 paragraphs of Lorem Ipsum dummy text
+\c@lips@count=\count139
+)
 (/usr/share/texlive/texmf-dist/tex/latex/base/inputenc.sty
 Package: inputenc 2008/03/30 v1.1d Input encoding file
 \inpenc@prehook=\toks23
@@ -610,7 +614,7 @@ Package: xkeyval 2012/10/14 v2.6b package option processing (HA)
 (/usr/share/texlive/texmf-dist/tex/generic/xkeyval/xkeyval.tex
 \XKV@toks=\toks25
 \XKV@tempa@toks=\toks26
-\XKV@depth=\count139
+\XKV@depth=\count140
 File: xkeyval.tex 2012/10/14 v2.6b key=value parser (HA)
 ))
 (/usr/share/texlive/texmf-dist/tex/latex/xcolor/xcolor.sty
@@ -670,10 +674,10 @@ ex
 \pgf@yc=\dimen156
 \w@pgf@writea=\write4
 \r@pgf@reada=\read2
-\c@pgf@counta=\count140
-\c@pgf@countb=\count141
-\c@pgf@countc=\count142
-\c@pgf@countd=\count143
+\c@pgf@counta=\count141
+\c@pgf@countb=\count142
+\c@pgf@countc=\count143
+\c@pgf@countd=\count144
  (/usr/share/texlive/texmf-dist/tex/generic/pgf/systemlayer/pgf.cfg
 File: pgf.cfg 2008/05/14  (rcs-revision 1.7)
 )
@@ -689,8 +693,8 @@ File: pgfsys-common-pdf.def 2008/05/19  (rcs-revision 1.10)
 (/usr/share/texlive/texmf-dist/tex/generic/pgf/systemlayer/pgfsyssoftpath.code.
 tex
 File: pgfsyssoftpath.code.tex 2008/07/18  (rcs-revision 1.7)
-\pgfsyssoftpath@smallbuffer@items=\count144
-\pgfsyssoftpath@bigbuffer@items=\count145
+\pgfsyssoftpath@smallbuffer@items=\count145
+\pgfsyssoftpath@bigbuffer@items=\count146
 )
 (/usr/share/texlive/texmf-dist/tex/generic/pgf/systemlayer/pgfsysprotocol.code.
 tex
@@ -704,7 +708,7 @@ Package: pgfcore 2010/04/11 v2.10 (rcs-revision 1.7)
 (/usr/share/texlive/texmf-dist/tex/generic/pgf/math/pgfmathutil.code.tex)
 (/usr/share/texlive/texmf-dist/tex/generic/pgf/math/pgfmathparser.code.tex
 \pgfmath@dimen=\dimen157
-\pgfmath@count=\count146
+\pgfmath@count=\count147
 \pgfmath@box=\box30
 \pgfmath@toks=\toks31
 \pgfmath@stack@operand=\toks32
@@ -726,7 +730,7 @@ tex)
 (/usr/share/texlive/texmf-dist/tex/generic/pgf/math/pgfmathfunctions.misc.code.
 tex)))
 (/usr/share/texlive/texmf-dist/tex/generic/pgf/math/pgfmathfloat.code.tex
-\c@pgfmathroundto@lastzeros=\count147
+\c@pgfmathroundto@lastzeros=\count148
 ))
 (/usr/share/texlive/texmf-dist/tex/generic/pgf/basiclayer/pgfcorepoints.code.te
 x
@@ -764,7 +768,7 @@ File: pgfcorescopes.code.tex 2010/09/08  (rcs-revision 1.34)
 \pgfpic=\box31
 \pgf@hbox=\box32
 \pgf@layerbox@main=\box33
-\pgf@picture@serial@count=\count148
+\pgf@picture@serial@count=\count149
 )
 (/usr/share/texlive/texmf-dist/tex/generic/pgf/basiclayer/pgfcoregraphicstate.c
 ode.tex
@@ -796,7 +800,7 @@ File: pgfcorearrows.code.tex 2008/04/23  (rcs-revision 1.11)
 (/usr/share/texlive/texmf-dist/tex/generic/pgf/basiclayer/pgfcoreshade.code.tex
 File: pgfcoreshade.code.tex 2008/11/23  (rcs-revision 1.13)
 \pgf@max=\dimen180
-\pgf@sys@shading@range@num=\count149
+\pgf@sys@shading@range@num=\count150
 )
 (/usr/share/texlive/texmf-dist/tex/generic/pgf/basiclayer/pgfcoreimage.code.tex
 File: pgfcoreimage.code.tex 2010/03/25  (rcs-revision 1.16)
@@ -849,7 +853,7 @@ Package: tikz 2010/10/13 v2.10 (rcs-revision 1.76)
 (/usr/share/texlive/texmf-dist/tex/generic/pgf/libraries/pgflibraryplothandlers
 .code.tex
 File: pgflibraryplothandlers.code.tex 2010/05/31 v2.10 (rcs-revision 1.15)
-\pgf@plot@mark@count=\count150
+\pgf@plot@mark@count=\count151
 \pgfplotmarksize=\dimen185
 )
 \tikz@lastx=\dimen186
@@ -860,18 +864,18 @@ File: pgflibraryplothandlers.code.tex 2010/05/31 v2.10 (rcs-revision 1.15)
 \tikzsiblingdistance=\dimen191
 \tikz@figbox=\box36
 \tikz@tempbox=\box37
-\tikztreelevel=\count151
-\tikznumberofchildren=\count152
-\tikznumberofcurrentchild=\count153
-\tikz@fig@count=\count154
+\tikztreelevel=\count152
+\tikznumberofchildren=\count153
+\tikznumberofcurrentchild=\count154
+\tikz@fig@count=\count155
 
 (/usr/share/texlive/texmf-dist/tex/generic/pgf/modules/pgfmodulematrix.code.tex
 File: pgfmodulematrix.code.tex 2010/08/24  (rcs-revision 1.4)
-\pgfmatrixcurrentrow=\count155
-\pgfmatrixcurrentcolumn=\count156
-\pgf@matrix@numberofcolumns=\count157
+\pgfmatrixcurrentrow=\count156
+\pgfmatrixcurrentcolumn=\count157
+\pgf@matrix@numberofcolumns=\count158
 )
-\tikz@expandcount=\count158
+\tikz@expandcount=\count159
 
 (/usr/share/texlive/texmf-dist/tex/generic/pgf/frontendlayer/tikz/libraries/tik
 zlibrarytopaths.code.tex
@@ -883,18 +887,18 @@ File: tikzlibrarypositioning.code.tex 2008/10/06 v2.10 (rcs-revision 1.7)
 )
 (/usr/share/texlive/texmf-dist/tex/latex/tools/calc.sty
 Package: calc 2007/08/22 v4.3 Infix arithmetic (KKT,FJ)
-\calc@Acount=\count159
-\calc@Bcount=\count160
+\calc@Acount=\count160
+\calc@Bcount=\count161
 \calc@Adimen=\dimen192
 \calc@Bdimen=\dimen193
 \calc@Askip=\skip185
 \calc@Bskip=\skip186
 LaTeX Info: Redefining \setlength on input line 76.
 LaTeX Info: Redefining \addtolength on input line 77.
-\calc@Ccount=\count161
+\calc@Ccount=\count162
 \calc@Cskip=\skip187
 )
-\c@@todonotes@numberoftodonotes=\count162
+\c@@todonotes@numberoftodonotes=\count163
 )
 (/usr/share/texlive/texmf-dist/tex/latex/oberdiek/ifdraft.sty
 Package: ifdraft 2008/08/11 v1.3 Detect class options draft and final (HO)
@@ -919,13 +923,13 @@ Package: amsbsy 1999/11/29 v1.2d
 (/usr/share/texlive/texmf-dist/tex/latex/amsmath/amsopn.sty
 Package: amsopn 1999/12/14 v2.01 operator names
 )
-\inf@bad=\count163
+\inf@bad=\count164
 LaTeX Info: Redefining \frac on input line 210.
-\uproot@=\count164
-\leftroot@=\count165
+\uproot@=\count165
+\leftroot@=\count166
 LaTeX Info: Redefining \overline on input line 306.
-\classnum@=\count166
-\DOTSCASE@=\count167
+\classnum@=\count167
+\DOTSCASE@=\count168
 LaTeX Info: Redefining \ldots on input line 378.
 LaTeX Info: Redefining \dots on input line 381.
 LaTeX Info: Redefining \cdots on input line 466.
@@ -934,15 +938,15 @@ LaTeX Info: Redefining \cdots on input line 466.
 \big@size=\dimen196
 LaTeX Font Info:    Redeclaring font encoding OML on input line 566.
 LaTeX Font Info:    Redeclaring font encoding OMS on input line 567.
-\macc@depth=\count168
-\c@MaxMatrixCols=\count169
+\macc@depth=\count169
+\c@MaxMatrixCols=\count170
 \dotsspace@=\muskip10
-\c@parentequation=\count170
-\dspbrk@lvl=\count171
+\c@parentequation=\count171
+\dspbrk@lvl=\count172
 \tag@help=\toks37
-\row@=\count172
-\column@=\count173
-\maxfields@=\count174
+\row@=\count173
+\column@=\count174
+\maxfields@=\count175
 \andhelp@=\toks38
 \eqnshift@=\dimen197
 \alignsep@=\dimen198
@@ -960,11 +964,11 @@ LaTeX Info: Redefining \] on input line 2666.
 (/usr/share/texlive/texmf-dist/tex/latex/microtype/microtype.sty
 Package: microtype 2013/03/13 v2.5 Micro-typographical refinements (RS)
 \MT@toks=\toks41
-\MT@count=\count175
+\MT@count=\count176
 LaTeX Info: Redefining \textls on input line 771.
 \MT@outer@kern=\dimen203
 LaTeX Info: Redefining \textmicrotypecontext on input line 1290.
-\MT@listname@count=\count176
+\MT@listname@count=\count177
 
 (/usr/share/texlive/texmf-dist/tex/latex/microtype/microtype-pdftex.def
 File: microtype-pdftex.def 2013/03/13 v2.5 Definitions specific to pdftex (RS)
@@ -1000,34 +1004,34 @@ Sidefootvsep and sidefootheight: 12pt and 596.39996pt
 (./report_hcs.aux)
 \openout1 = `report_hcs.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 28.
-LaTeX Font Info:    ... okay on input line 28.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 28.
-LaTeX Font Info:    ... okay on input line 28.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 28.
-LaTeX Font Info:    ... okay on input line 28.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 28.
-LaTeX Font Info:    ... okay on input line 28.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 28.
-LaTeX Font Info:    ... okay on input line 28.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 28.
-LaTeX Font Info:    ... okay on input line 28.
-LaTeX Font Info:    Try loading font information for T1+ptm on input line 28.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 29.
+LaTeX Font Info:    ... okay on input line 29.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 29.
+LaTeX Font Info:    ... okay on input line 29.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 29.
+LaTeX Font Info:    ... okay on input line 29.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 29.
+LaTeX Font Info:    ... okay on input line 29.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 29.
+LaTeX Font Info:    ... okay on input line 29.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 29.
+LaTeX Font Info:    ... okay on input line 29.
+LaTeX Font Info:    Try loading font information for T1+ptm on input line 29.
  (/usr/share/texlive/texmf-dist/tex/latex/psnfss/t1ptm.fd
 File: t1ptm.fd 2001/06/04 font definitions for T1/ptm.
 )
 (/usr/share/texlive/texmf-dist/tex/context/base/supp-pdf.mkii
 [Loading MPS to PDF converter (version 2006.09.02).]
-\scratchcounter=\count177
+\scratchcounter=\count178
 \scratchdimen=\dimen204
 \scratchbox=\box40
-\nofMPsegments=\count178
-\nofMParguments=\count179
+\nofMPsegments=\count179
+\nofMParguments=\count180
 \everyMPshowfont=\toks42
-\MPscratchCnt=\count180
+\MPscratchCnt=\count181
 \MPscratchDim=\dimen205
-\MPnumerator=\count181
-\makeMPintoPDFobject=\count182
+\MPnumerator=\count182
+\makeMPintoPDFobject=\count183
 \everyMPtoPDFconversion=\toks43
 ) (/usr/share/texlive/texmf-dist/tex/generic/oberdiek/pdftexcmds.sty
 Package: pdftexcmds 2011/11/29 v0.20 Utility functions of pdfTeX for LuaTeX (HO
@@ -1069,7 +1073,7 @@ File: epstopdf-sys.cfg 2010/07/13 v1.3 Configuration of (r)epstopdf for TeX Liv
 e
 ))
 ABD: EveryShipout initializing macros
-LaTeX Info: Redefining \microtypecontext on input line 28.
+LaTeX Info: Redefining \microtypecontext on input line 29.
 Package microtype Info: Generating PDF output.
 Package microtype Info: Character protrusion enabled (level 2).
 Package microtype Info: Using default protrusion set `alltext'.
@@ -1087,25 +1091,29 @@ File: mt-ptm.cfg 2006/04/20 v1.7 microtype config. file: Times (RS)
 File: mt-cmr.cfg 2011/04/09 v2.1 microtype config. file: Computer Modern Roman 
 (RS)
 )
+LaTeX Font Info:    Font shape `T1/ptm/bx/n' in size <9> not available
+(Font)              Font shape `T1/ptm/b/n' tried instead on input line 31.
 LaTeX Font Info:    Font shape `T1/ptm/bx/n' in size <12> not available
-(Font)              Font shape `T1/ptm/b/n' tried instead on input line 33.
+(Font)              Font shape `T1/ptm/b/n' tried instead on input line 43.
+LaTeX Font Info:    Font shape `T1/ptm/bx/n' in size <10> not available
+(Font)              Font shape `T1/ptm/b/n' tried instead on input line 52.
+ [1
 
-(./report_hcs.bbl [1
-
-{/usr/share/texlive/texmf/fonts/map/pdftex/updmap/pdftex.map}]
+{/usr/share/texlive/texmf/fonts/map/pdftex/updmap/pdftex.map}] (./report_hcs.bb
+l [2]
 LaTeX Font Info:    Font shape `T1/ptm/bx/n' in size <20.74> not available
 (Font)              Font shape `T1/ptm/b/n' tried instead on input line 1.
 
 bibitemlist
-) [2
+) [3
 
 ] (./report_hcs.aux) ) 
 Here is how much of TeX's memory you used:
- 16321 strings out of 495063
- 282591 string characters out of 3182195
- 379815 words of memory out of 3000000
- 19150 multiletter control sequences out of 15000+200000
- 36508 words of font info for 84 fonts, out of 3000000 for 9000
+ 16565 strings out of 495063
+ 285348 string characters out of 3182195
+ 474383 words of memory out of 3000000
+ 19339 multiletter control sequences out of 15000+200000
+ 48330 words of font info for 121 fonts, out of 3000000 for 9000
  14 hyphenation exceptions out of 8191
  69i,12n,57p,449b,292s stack positions out of 5000i,500n,10000p,200000b,50000s
 {/usr/share/texlive/texmf-dist/fonts/enc/dvips/base/8r.en
@@ -1115,10 +1123,10 @@ r/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy6.pfb></usr/share
 e/texmf-dist/fonts/type1/urw/times/utmb8a.pfb></usr/share/texlive/texmf-dist/fo
 nts/type1/urw/times/utmr8a.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/t
 imes/utmri8a.pfb>
-Output written on report_hcs.pdf (2 pages, 64005 bytes).
+Output written on report_hcs.pdf (3 pages, 70114 bytes).
 PDF statistics:
- 39 PDF objects out of 1000 (max. 8388607)
- 28 compressed objects within 1 object stream
+ 42 PDF objects out of 1000 (max. 8388607)
+ 30 compressed objects within 1 object stream
  0 named destinations out of 1000 (max. 500000)
- 23053 words of extra memory for PDF output out of 24883 (max. 10000000)
+ 30221 words of extra memory for PDF output out of 35830 (max. 10000000)
 
