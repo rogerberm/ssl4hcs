@@ -9,13 +9,15 @@ Supervisor: Peter Horvath
 ETH Zurich, 2013.
 '''
 import sys
+from math import exp
 from glob import glob
-from numpy import array, concatenate
+from numpy import array, concatenate, vectorize, where
+from numpy.ma import masked_array
 from getopt import getopt, GetoptError
 from scipy.spatial.distance import pdist, squareform
 from utils import print_help, assert_argument, parentdir, \
-    get_sample, generate_test_data, hcs_class_labels, \
-    dummy_class_labels, MESSAGES
+    get_sample, generate_test_data, get_files, hcs_soft_labels, \
+    dummy_soft_labels, MESSAGES
 
 quiet = False
 
@@ -25,7 +27,7 @@ def ___(text, quiet=False):
         print text
 
 
-def read_hcs_file(file_path, feature_list, delimiter=None, column_offset=2):
+def read_hcs_file(file_path, feature_list, delimiter=None, column_offset=2, soft_label=-1):
     '''
     Reads a file with the tif.txt format (delimiter='  ', ignore first '  ' at the beginning of each line)
 
@@ -38,14 +40,14 @@ def read_hcs_file(file_path, feature_list, delimiter=None, column_offset=2):
 
     Returns
     -------
-    2yynumpy [len(features) + 1]-dimensional array containing the feature values (as float) and a default (-1) label
+    numpy [len(features) + 1]-dimensional array containing the feature values (as float) and a default (-1) label
     for each data point in the file.
     '''
     feature_values = None
     with open(file_path, 'r') as txt_file_pointer:
         feature_values = [[float(text_fields[feature_index + column_offset - 1])
                            for feature_index in feature_list + [len(text_fields) - column_offset]]
-                          for text_fields in [txt_line.strip().split(delimiter) + ['-1']
+                          for text_fields in [txt_line.strip().split(delimiter) + [soft_label]
                                               for txt_line in txt_file_pointer]]
     return array(feature_values)
 
@@ -98,17 +100,19 @@ def process_cmdline(argv):
     Reads program parameters from the command line and sets default values for missing parameters
     '''
     try:
-        opts, args = getopt(argv, "hu:l:f:s:cq", ["unlabeled=", "labeled=", "features="])
+        opts, args = getopt(argv, "hu:l:f:n:s:cq", ["unlabeled=", "labeled=", "features="])
     except GetoptError as err:
         print(str(err))
         sys.exit(2)
-    unlabeled_file_references, labeled_file_references = None, None
+    unlabeled_file_references, soft_labeled_path, labeled_file_references = None, None, None
     # Defaults:
     feature_list = [1, 2]
     sample_size = 3000
+    soft_labeled_sample_size = sample_size / 2
+    unlabeled_sample_size = sample_size / 2
     class_sampling = True
     distance_metric = 'euclidean'
-    neighborhood_fn = 'exp'
+    neighborhood_fn = 'knn2'
     alpha = 0.94
     max_iterations = 1000
 
@@ -117,13 +121,22 @@ def process_cmdline(argv):
             unlabeled_file_references = glob(arg)
         elif opt in ('-l', '--labeled'):
             labeled_file_references = glob(arg)
+        elif opt in ('-s', '--soft-labeled-path'):
+            soft_labeled_arg = glob(arg)
+            if len(soft_labeled_arg) > 0:
+                soft_labeled_path = glob(arg)[0]
+            else:
+                print MESSAGES['INVALID_SOFT_LABELED_FILE_PATH']
+                sys.exit(2)
         elif opt in ('-h', '--help'):
             print_help()
             sys.exit()
         elif opt in ('-q', '--quiet'):
             globals()['quiet'] = True
-        elif opt in ('-s', '--sample-size'):
+        elif opt in ('-n', '--num-samples'):
             sample_size = int(arg)
+            soft_labeled_sample_size = sample_size / 2
+            unlabeled_sample_size = sample_size / 2
         elif opt == '-c':
             class_sampling = True
         elif opt in ('-f', '--features'):
@@ -144,13 +157,17 @@ def process_cmdline(argv):
     ___("loading %i unlabeled datasets..." % len(unlabeled_file_references))
     assert_argument(labeled_file_references, MESSAGES['NO_LABELED_FILE_MESSAGE'])
     ___("loading %i labeled datasets..." % len(labeled_file_references))
-    return (unlabeled_file_references, labeled_file_references, feature_list, sample_size,
-            class_sampling, distance_metric, neighborhood_fn, alpha, max_iterations)
+    return (unlabeled_file_references, soft_labeled_path, labeled_file_references, feature_list,
+            soft_labeled_sample_size, unlabeled_sample_size, class_sampling, distance_metric,
+            neighborhood_fn, alpha, max_iterations)
 
 
 def propagate_labels_SSL(feature_matrix, initial_labels, distance_metric, neighborhood_fn, alpha, max_iterations):
     '''
-    Implementation of the label spreading algorithm (Zhou XXXX?) on a graph, represented by its similarity matrix
+    Implementation of the label spreading algorithm (Zhou et al., 2004) on a graph, represented by 
+    its similarity matrix.
+    Parameters:
+    [TODO: add parameter information]
     '''
     ___("calculating pairwise distances for %i datapoints, %i dimensions each..." %
         (len(feature_matrix), len(feature_matrix[0])))
@@ -159,11 +176,31 @@ def propagate_labels_SSL(feature_matrix, initial_labels, distance_metric, neighb
     ___("getting the square form...",)
     pairwise_matrix = squareform(pairwise)
     ___("%ix%i pairwise distances matrix created" % (len(pairwise_matrix), len(pairwise_matrix)))
+
+    # Create weight matrix W:
+    if neighborhood_fn == 'exp':
+        exp_matrix = vectorize(lambda x: exp(-x))
+        W = exp_matrix(pairwise)
+    elif neighborhood_fn.startswith('knn'):
+		k = int(neighborhood_fn[len('knn'):])
+		#W = masked_array(pairwise_matrix, mask=pairwise_matrix.argsort(axis=1) >= k)
+		W = where(pairwise_matrix.argsort()>=k, -1, pairwise_matrix)
+		print W
+
+		from numpy import set_printoptions, array2string
+		from os import environ
+		set_printoptions(linewidth=environ.get("COLUMNS") or 230, nanstr='0', precision=4)
+		print(array2string(pairwise_matrix.argsort(axis=1)))
+		print(array2string(W))
+		print(array2string(pairwise_matrix))
+
+    # useful functions: numpy.put, numpy.putmask
+
     return None
 
 
-def setup_feature_matrix(unlabeled_file_references, labeled_file_references, feature_list,
-                         sample_size, class_sampling, class_labels=hcs_class_labels):
+def setup_feature_matrix(unlabeled_file_references, soft_labeled_path, labeled_file_references, feature_list,
+                         soft_labeled_sample_size, unlabeled_sample_size, class_sampling, class_labels=hcs_soft_labels):
     '''
     Reads files with unlabeled and labeled information, and creates the feature matrix with the features
     specified in the feature list
@@ -172,6 +209,7 @@ def setup_feature_matrix(unlabeled_file_references, labeled_file_references, fea
     ----------
     unlabeled_file_references -- paths to txt files with raw unlabeled data
     labeled_file_references   -- paths to arff files with labeled data
+    soft_labeled_path         -- paths txt soft-labeled files. This path should contain a directory per label
     feature_list              -- list with the indices of the selected features (1 based)
     sample_size               -- size of sampling over unlabeled data (-1 means use all data)
     class_sampling            -- if sampling is required, sample the same number of points per class
@@ -184,25 +222,34 @@ def setup_feature_matrix(unlabeled_file_references, labeled_file_references, fea
 
     labeled_data = [read_arff_file(input_file, feature_list) for input_file in labeled_file_references]
     labeled_points = concatenate(labeled_data)
+	# [TODO]: remove next line when not testing
+    labeled_points = get_sample(labeled_points, 2)  # ???
 
-    unlabeled_points = None
-    if class_sampling:
+    unlabeled_data = [read_hcs_file(input_file, feature_list) for input_file in unlabeled_file_references]
+    unlabeled_points = concatenate(unlabeled_data)
+
+    unlabeled_points = get_sample(unlabeled_points, unlabeled_sample_size)  # ???
+
+    soft_labeled_points = None
+    if soft_labeled_path:
+        soft_labeled_data = {label_key: [] for label_key in class_labels.keys()}
+        soft_labeled_file_references = get_files(soft_labeled_path)
+        for input_file in soft_labeled_file_references:
+            label_key = parentdir(input_file)
+            soft_labeled_data[label_key] += [read_hcs_file(input_file, feature_list, soft_label=class_labels[label_key])]
         # Sample unlabeled data uniformly over classes
-        # (classes hardcoded, txt files into directories with these names assumed)
-        class_sample_size = {class_label: sample_size / len(class_labels) for class_label in class_labels.keys()[:-1]}
-        class_sample_size[class_labels.keys()[-1]] = sample_size - sum(class_sample_size.values())
-        semilabeled_data = {prefix: [] for prefix in class_labels.keys()}
-        for input_file in unlabeled_file_references:
-            semilabeled_data[parentdir(input_file)] += [read_hcs_file(input_file, feature_list)]
-        unlabeled_data = [get_sample(concatenate(unlabeled_set), class_sample_size[unlabeled_set_name])
-                          for unlabeled_set_name, unlabeled_set in semilabeled_data.iteritems()]
-        unlabeled_points = concatenate(unlabeled_data)
-    else:
-        unlabeled_data = [read_hcs_file(input_file, feature_list) for input_file in unlabeled_file_references]
-        unlabeled_points = concatenate(unlabeled_data)
-        unlabeled_points = get_sample(unlabeled_points, sample_size)
+        if class_sampling:
+            class_sample_size = {class_label: soft_labeled_sample_size / len(class_labels) if class_sampling else -1 for class_label in class_labels.keys()}
+            soft_labeled_data = [get_sample(concatenate(soft_labeled_set), class_sample_size[label_key])
+                                 for soft_labeled_set_name, soft_labeled_set in soft_labeled_data.iteritems()]
+        else:
+            soft_labeled_data = soft_labeled_data.values()
+        soft_labeled_points = concatenate(soft_labeled_data)
 
-    M = concatenate([unlabeled_points, labeled_points])
+    if soft_labeled_points is None:
+        M = concatenate([unlabeled_points, labeled_points])
+    else:
+        M = concatenate([unlabeled_points, soft_labeled_points, labeled_points])
     return M
 
 
@@ -211,11 +258,12 @@ def main(argv):
     Reads the parameters from the command line, loads the referred labeled and unlabeled files, and
     applies the label propagation algorithm iteratively
     '''
-    unlabeled_file_references, labeled_file_references, feature_list, sample_size, class_sampling, \
-        distance_metric, neighborhood_fn, alpha, max_iterations = process_cmdline(argv)
+    unlabeled_file_references, soft_labeled_path, labeled_file_references, feature_list, soft_labeled_sample_size, \
+        unlabeled_sample_size, class_sampling, distance_metric, neighborhood_fn, alpha, max_iterations \
+        = process_cmdline(argv)
 
-    M = setup_feature_matrix(unlabeled_file_references, labeled_file_references, feature_list,
-                             sample_size, class_sampling)
+    M = setup_feature_matrix(unlabeled_file_references, soft_labeled_path, labeled_file_references, feature_list,
+                             soft_labeled_sample_size, unlabeled_sample_size, class_sampling)
 
     Y = propagate_labels_SSL(M[:, :-1], M[:, -1], distance_metric, neighborhood_fn, alpha, max_iterations)
     return Y
@@ -225,11 +273,12 @@ def load_test():
     '''
     Creates and uses dummy data to test the label propagation algorithm
     '''
-    unlabeled_file_references, labeled_file_references, feature_list, sample_size, class_sampling, \
-        distance_metric, neighborhood_fn, alpha, max_iterations = generate_test_data()
+    unlabeled_file_references, soft_labeled_path, labeled_file_references, feature_list, soft_labeled_sample_size, \
+        unlabeled_sample_size, class_sampling, distance_metric, neighborhood_fn, alpha, max_iterations \
+        = generate_test_data()
 
-    M = setup_feature_matrix(unlabeled_file_references, labeled_file_references, feature_list,
-                             sample_size, class_sampling, dummy_class_labels)
+    M = setup_feature_matrix(unlabeled_file_references, soft_labeled_path, labeled_file_references, feature_list,
+                             soft_labeled_sample_size, unlabeled_sample_size, class_sampling, dummy_soft_labels)
 
     Y = propagate_labels_SSL(M[:, :-1], M[:, -1], distance_metric, neighborhood_fn, alpha, max_iterations)
     return Y
