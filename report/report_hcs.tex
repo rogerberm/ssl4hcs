@@ -1,5 +1,5 @@
 \RequirePackage[final]{graphicx} % to allow for graphics to show in draft mode
-\documentclass[oneside, a4paper, final]{memoir} % scrreprt | memoir [twocolumn?]
+\documentclass[oneside, a4paper, draft]{memoir} % scrreprt | memoir [twocolumn?]
 \usepackage[T1]{fontenc}  % encoding, ligature removal works
 \usepackage{lipsum}
 \usepackage[utf8]{inputenc}
@@ -29,26 +29,36 @@
 \begin{document}
 \maketitle
 \begin{abstract}
+Semi-supervised machine learning techniques are particularly useful in experiments where data annotation and classification
+is time- and resource-consuming or error-prone. In biological experiments this is often the case.
+Here, we apply a graph-based machine learning method to classify cells in different stages of infection with the Semliki Forest Virus (SFV),
+which features have been extracted from image analysis of fluorescence microscopy results, obtained in turn from a genome-wide
+high-content screening experiment.
+The aim of this project is to investigate whether and to which extent intelligent control experiment design 
+combined with semi-supervised learning can reach the accuracy of a human annotator and/or in certain 
+cases substitute it.
+
+\end{abstract}
+\setcounter{secnumdepth}{0}
+
+\section{Introduction}
 Recent advancements in high-throughput microscopy and data analysis made possible to perform large 
 scale biological experiments and automatically evaluate them. For the detection of sub-cellular changes 
 caused by different perturbations in the cell (RNAi or drugs) often supervised machine learning (SML) 
-is used. Reliable training of an SML method requires significant effort from a field expert. The aim of 
-this project is to investigate whether and to which extent intelligent control experiment design 
-combined with semi-supervised learning can reach the accuracy of a human annotator and/or in certain 
-cases substitute it.
-\end{abstract}
-\setcounter{secnumdepth}{0}
-%c \part{p1}, \chapter{c1}, \section{s2}, \subsection{ss1}, \subsubsection{sss1}, \paragraph{p1}, \subparagraph{sp1}
+is used. Reliable training of an SML method, however, requires significant effort from a field expert.
 
-\section{Introduction}
-\lipsum[19]
+As an alternative, semi-supervised machine learning (SSL) methods allow to make use of a larger amount of information,
+by exploiting both annotated information and the relative distribution of unannotated data on the feature space.
+\todo{expand this introduction?}
 
-\section{Method}
-\lipsum[4-5]
-
-\section{Data sources, Tools, and Methods}
+\section{Materials and Methods}
+\subsection{High-content screening}
+A human genome-wide siRNA library was used to produce phenotypes of human cells with knocked-out \todo{confirm this is correct/well-written}genes. These cell cultures 
+were exposed to a genetically engineered fluorescent SFV strand
+\lipsum[27]
 \begin{description}
 	\item[Data sources]
+
 	labeled and unlabeled datasources
 	\item[Tools] weka, numpy, scipy
 	\item[methods] label spreading
@@ -63,7 +73,7 @@ cases substitute it.
 \section{Conclusions}
 \todo{fill in conclusions}
 \lipsum[3]
-\nocite{duda2001pattern, chapelle2006semi, hall2009weka}
+\nocite{duda2001pattern, chapelle2006semi, hall2009weka, estes2007fields, banerjee2013high, carpenter2006cellprofiler}
 
 \bibliographystyle{ieeetr}  % orders by occurrence in the document
 \bibliography{references}

@@ -14,4 +14,20 @@ M.~Hall, E.~Frank, G.~Holmes, B.~Pfahringer, P.~Reutemann, and I.~H. Witten,
   ``The weka data mining software: an update,'' {\em ACM SIGKDD Explorations
   Newsletter}, vol.~11, no.~1, pp.~10--18, 2009.
 
+\bibitem{estes2007fields}
+M.~Estes, A.~Kapikian, D.~Knipe, and P.~Howley, ``Fields virology,'' {\em
+  Philadelphia, PA: Lippencott, Williams and Wilkins}, 2007.
+
+\bibitem{banerjee2013high}
+I.~Banerjee, Y.~Yamauchi, A.~Helenius, and P.~Horvath, ``High-content analysis
+  of sequential events during the early phase of influenza a virus infection,''
+  {\em PLOS ONE}, vol.~8, no.~7, p.~e68450, 2013.
+
+\bibitem{carpenter2006cellprofiler}
+A.~E. Carpenter, T.~R. Jones, M.~R. Lamprecht, C.~Clarke, I.~H. Kang,
+  O.~Friman, D.~A. Guertin, J.~H. Chang, R.~A. Lindquist, J.~Moffat, {\em
+  et~al.}, ``Cellprofiler: image analysis software for identifying and
+  quantifying cell phenotypes,'' {\em Genome biology}, vol.~7, no.~10, p.~R100,
+  2006.
+
 \end{thebibliography}

@@ -10,6 +10,12 @@ MESSAGES = {'NO_LABELED_FILE_MESSAGE': 'Invalid or no labeled file specified',
             'INVALID_SOFT_LABELED_FILE_PATH': 'Invalid soft labeled file path'}
 
 
+hcs_labels = {1: 'non-infected',
+              2: 'stage 1',
+              3: 'stage 2',
+              4: 'stage 3',
+              5: 'stage 4'}
+
 hcs_soft_labels = {'bPEGI-29': 1,  # non-infected = 1
                    'bPEGI-26': 2,  # inGroup1 = 2
                    'bPEGI-27': 3,  # inGroup2 = 3
@@ -17,8 +23,17 @@ hcs_soft_labels = {'bPEGI-29': 1,  # non-infected = 1
                    'bPEGI-28': 5}  # inGroup4 = 5
 
 
+dummy_labels = {1: 'non-infected',
+                2: 'infected'}
+
+hcs_soft_label_alphas = {1: 0.5, 2: 0.95, 3: 0.95, 4: 0.95, 5: 0.95}
+
+
 dummy_soft_labels = {'non-infected': 1,
                      'infected4': 5}
+
+
+dummy_soft_label_alphas = {1: 0.95, 5: 0.95}
 
 
 def print_help():
@@ -61,6 +76,7 @@ def generate_test_data():
     sample_size = 4
     soft_labeled_sample_size = sample_size / 2
     unlabeled_sample_size = sample_size / 2
+    labeled_sample_size = sample_size
     class_sampling = True
     distance_metric = 'euclidean'
     neighborhood_function = 'exp'
@@ -68,5 +84,5 @@ def generate_test_data():
     max_iterations = 100
 
     return (unlabeled_file_references, soft_labeled_path, labeled_file_references, feature_list,
-            soft_labeled_sample_size, unlabeled_sample_size, class_sampling, distance_metric,
+            soft_labeled_sample_size, unlabeled_sample_size, labeled_sample_size, class_sampling, distance_metric,
             neighborhood_function, alpha, max_iterations)

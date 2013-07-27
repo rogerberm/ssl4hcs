@@ -10,14 +10,17 @@ ETH Zurich, 2013.
 '''
 import sys
 from math import exp
-from glob import glob
+from random import seed
 import numpy as np
-#from numpy import array as np.array, concatenate, vectorize, where, diag
-#from numpy.ma import masked_array
-from getopt import getopt, GetoptError
-from scipy.spatial.distance import pdist, squareform
-from utils import print_help, assert_argument, parentdir, get_sample, generate_test_data, get_files, \
-    hcs_soft_labels, dummy_soft_labels, MESSAGES
+from numpy import set_printoptions
+from numpy.random import RandomState
+import argparse
+from scipy.spatial.distance import pdist, squareform, euclidean
+from utils import parentdir, get_sample, generate_test_data, get_files, \
+    hcs_labels, hcs_soft_labels, hcs_soft_label_alphas, dummy_soft_labels, dummy_soft_label_alphas
+import matplotlib.pyplot as plt
+from matplotlib import animation
+from matplotlib import cm
 
 quiet = False
 
@@ -99,73 +102,75 @@ def process_cmdline(argv):
     '''
     Reads program parameters from the command line and sets default values for missing parameters
     '''
-    try:
-        opts, args = getopt(argv, "hu:l:f:n:s:cqt", ["unlabeled=", "labeled=", "features="])
-    except GetoptError as err:
-        print(str(err))
-        sys.exit(2)
-    unlabeled_file_references, soft_labeled_path, labeled_file_references = None, None, None
-    # Defaults:
-    feature_list = [1, 2]
-    sample_size = 3000
-    soft_labeled_sample_size = sample_size / 2
-    unlabeled_sample_size = sample_size / 2
-    class_sampling = True
-    distance_metric = 'euclidean'
-    neighborhood_fn = 'exp'
+    # TODO: move this to utils
+    parser = argparse.ArgumentParser(description="Label propagation")
+    parser.add_argument("-t", "--test", help="Performs a test run.", action='store_true')
+    parser.add_argument("-l", "--labeled", help="Labeled files.", dest="labeled_file_references", nargs='+',
+                        metavar='LABELED_FILE')
+    parser.add_argument("-u", "--unlabeled", help="Unlabeled files.", dest='unlabeled_file_references', nargs='+',
+                        metavar='UNLABELED_FILE')
+    parser.add_argument("-s", "--soft-labeled", help="Path to soft labeled files. One directory per label expected.",
+                        dest='soft_labeled_path')
+    parser.add_argument("-L", "--num-labeled", help="Number of labeled data points to use. Default: use all available",
+                        type=int, dest='labeled_sample_size', default=-1, metavar='NUM_LABELED_POINTS')
+    parser.add_argument("-n", "--num-samples", help="Number of samples. Default: 3000", type=int, dest='sample_size',
+                        default=3000, metavar='NUM_SAMPLES')
+    parser.add_argument("-c", "--class-sampling", help='Distributes the number of samples given by [NUM_SAMPLES]\
+                        uniformly over all soft classes', dest='class_sampling', action='store_true')
+    parser.add_argument("--max-iterations", help="Maximum number of iterations. Default: 1000", type=int,
+                        dest='max_iterations', default=1000)
+    parser.add_argument("-d", "--display-columns", help="Max width used for matrix display on console", type=int,
+                        dest='width', default=310)
+    parser.add_argument("-nf", "--neighborhood-function", help="Neighborhood function to use. Default: exp",
+                        choices=['exp', 'knn3', 'knn4', 'knn5', 'knn6'], dest='neighborhood_fn', default='exp')
+    parser.add_argument("-dm", "--distance-metric", help="Metric for calculating pairwise distances. Default: euclidean",
+                        choices=['euclidean', 'cityblock', 'cosine', 'sqeuclidean', 'hamming', 'chebyshev'],
+                        dest='distance_metric', default='euclidean')
+    parser.add_argument("-f", "--features", help='Selected feature indices (as given by the labeled data).', nargs='+',
+                        dest='feature_list', type=int, default=[1, 2], metavar='FEATURE_INDEX')
+    parser.add_argument("-q", "--quiet", help="Displays progress and messages.", action='store_true')
+    args = vars(parser.parse_args())
+    args['soft_labeled_sample_size'] = args['sample_size'] / 2
+    args['unlabeled_sample_size'] = args['sample_size'] / 2
+    if args['test']:
+        args['unlabeled_file_references'] = ["../dummydata/unlabeled/bDummy/bDummy1.txt",
+                                             "../dummydata/unlabeled/bDummy/bDummy2.txt",
+                                             "../dummydata/unlabeled/bDummy/bDummy3.txt"]
+        args['soft_labeled_path'] = "../dummydata/soft/"
+        args['labeled_file_references'] = ["../dummydata/labeled/labeled.arff"]
+    #print args
+
+    #TODO: pass args namespace object
+    unlabeled_file_references = args['unlabeled_file_references']
+    soft_labeled_path = args['soft_labeled_path']
+    labeled_file_references = args['labeled_file_references']
+    feature_list = args['feature_list']
+    soft_labeled_sample_size = args['soft_labeled_sample_size']
+    unlabeled_sample_size = args['unlabeled_sample_size']
+    labeled_sample_size = args['labeled_sample_size']
+    class_sampling = args['class_sampling']
+    distance_metric = args['distance_metric']
+    neighborhood_fn = args['neighborhood_fn']
     alpha = 0.94
-    max_iterations = 1000
+    max_iterations = args['max_iterations']
+    set_printoptions(linewidth=args['width'] - 1, nanstr='0', precision=3)
 
-    for opt, arg in opts:
-        if opt in ('-u', '--unlabeled'):
-            unlabeled_file_references = glob(arg)
-        if opt in ('-t', '--test'):
-            load_test()
-            sys.exit()
-        elif opt in ('-l', '--labeled'):
-            labeled_file_references = glob(arg)
-        elif opt in ('-s', '--soft-labeled-path'):
-            soft_labeled_arg = glob(arg)
-            if len(soft_labeled_arg) > 0:
-                soft_labeled_path = glob(arg)[0]
-            else:
-                print MESSAGES['INVALID_SOFT_LABELED_FILE_PATH']
-                sys.exit(2)
-        elif opt in ('-h', '--help'):
-            print_help()
-            sys.exit()
-        elif opt in ('-q', '--quiet'):
-            globals()['quiet'] = True
-        elif opt in ('-n', '--num-samples'):
-            sample_size = int(arg)
-            soft_labeled_sample_size = sample_size / 2
-            unlabeled_sample_size = sample_size / 2
-        elif opt == '-c':
-            class_sampling = True
-        elif opt in ('-f', '--features'):
-            try:
-                feature_list = eval(arg)
-                if not isinstance(feature_list, list):
-                    raise NameError('Argument is not a list')
-            except NameError:
-                print MESSAGES['INVALID_FEATURE_LIST_MESSAGE']
-                sys.exit(2)
-            except SyntaxError:
-                print MESSAGES['INVALID_FEATURE_LIST_MESSAGE']
-                sys.exit(2)
-            pass
-        else:
-            assert False, "unhandled option"
-    assert_argument(unlabeled_file_references, MESSAGES['NO_UNLABELED_FILE_MESSAGE'])
-    ___("loading %i unlabeled datasets..." % len(unlabeled_file_references))
-    assert_argument(labeled_file_references, MESSAGES['NO_LABELED_FILE_MESSAGE'])
-    ___("loading %i labeled datasets..." % len(labeled_file_references))
+    test = args['test']
     return (unlabeled_file_references, soft_labeled_path, labeled_file_references, feature_list,
-            soft_labeled_sample_size, unlabeled_sample_size, class_sampling, distance_metric,
-            neighborhood_fn, alpha, max_iterations)
+            soft_labeled_sample_size, unlabeled_sample_size, labeled_sample_size, class_sampling, distance_metric,
+            neighborhood_fn, alpha, max_iterations, test)
 
 
-def propagate_labels_SSL(feature_matrix, initial_labels, distance_metric, neighborhood_fn, alpha_vector, max_iterations):
+def generate_color_map(label_array, num_labeled, num_soft_labeled, unlabeled_initial_color=None):
+    color_map = np.concatenate([
+        np.where(label_array[0, 0:num_labeled] > 0, 1.0,  0.0),
+        np.where(label_array[0, num_labeled:num_labeled + num_soft_labeled] > 0, 0.9,  0.1),
+        np.where(label_array[0, num_labeled + num_soft_labeled:] > 0, unlabeled_initial_color or 0.75,  unlabeled_initial_color or 0.25)])
+    return color_map
+
+
+def propagate_labels_SSL(feature_matrix, initial_labels, distance_metric, neighborhood_fn, alpha_vector,
+                         max_iterations, num_labeled_points, num_soft_labeled_points, labels=hcs_labels):
     '''
     Implementation of the label spreading algorithm (Zhou et al., 2004) on a graph, represented by
     its similarity matrix.
@@ -174,7 +179,7 @@ def propagate_labels_SSL(feature_matrix, initial_labels, distance_metric, neighb
     '''
     ___("calculating pairwise distances for %i datapoints, %i dimensions each..." %
         (len(feature_matrix), len(feature_matrix[0])))
-    pairwise = pdist(feature_matrix[:, :-1])
+    pairwise = pdist(feature_matrix)
     ___("  pairwise distances: %s... (%i distances)" % (str(pairwise[1:5]).replace(']', ''), len(pairwise)))
     ___("getting the square form...",)
     pairwise_matrix = squareform(pairwise)
@@ -186,49 +191,69 @@ def propagate_labels_SSL(feature_matrix, initial_labels, distance_metric, neighb
         W = squareform(exp_matrix(pairwise))
     elif neighborhood_fn.startswith('knn'):
         k = int(neighborhood_fn[len('knn'):])
-        #W = masked_array(pairwise_matrix, mask=pairwise_matrix.argsort(axis=1) >= k)
-        W = np.where(pairwise_matrix.argsort() >= k, -1, pairwise_matrix)
-        print W
-
-        from numpy import set_printoptions, array2string
-        from os import environ
-        set_printoptions(linewidth=environ.get("COLUMNS") or 230, nanstr='0', precision=4)
-        print(array2string(pairwise_matrix.argsort(axis=1)))
-        print(array2string(W))
-        print(array2string(pairwise_matrix))
-
+        print "Using %i nearest neighbors" % k
+        knns = np.argsort(pairwise_matrix, axis=1)[:, :k + 1]
+        W = np.array([[1 if j in knns[i] else 0 for j in range(pairwise_matrix.shape[0])] for i in range(pairwise_matrix.shape[0])])
     np.fill_diagonal(W, 0)
-    D_sqrt_inv = np.diag(1.0 / np.sum(W, axis=1))  # D^{-1/2}
-    Alpha = np.diag(alpha_vector)
-    OneMinusAlpha = np.diag(1 - np.array(alpha_vector))
-    Y_0, Y = np.array(initial_labels), np.array(initial_labels)
-    # print Alpha, OneMinusAlpha
-    Laplacian = D_sqrt_inv.dot(W).dot(D_sqrt_inv)
-    ___("Iterating %i times..." % max_iterations)
-    from numpy import set_printoptions, array2string
-    from os import environ
-    set_printoptions(linewidth=environ.get("COLUMNS") or 230, nanstr='0', precision=4)
-    print Y, Laplacian
-    alpha = 0.95
-    for i in range(max_iterations):
-        print "\r>>iteration: %i" % i,
+
+    D_sqrt_inv = np.matrix(np.diag(1.0 / np.sqrt(np.sum(W, axis=1))))  # D^{-1/2}
+    Alpha = np.matrix(np.diag(alpha_vector))
+    OneMinusAlpha = np.matrix(np.diag(1 - np.array(alpha_vector)))
+    Y_0 = np.matrix(initial_labels).T
+    Y_t = np.matrix(initial_labels).T
+    ___("Calculating Laplacian..."),
+    Laplacian = D_sqrt_inv * W * D_sqrt_inv
+    ___("Iterating up to %i times..." % max_iterations)
+
+    # setup plot
+    fig = plt.figure()
+    splot_orig = fig.add_subplot(121)
+    splot = fig.add_subplot(122)
+    labeled_array = generate_color_map(np.array(Y_t.T), num_labeled_points, num_soft_labeled_points, 0.5)
+    scat_orig = splot_orig.scatter(feature_matrix[:, 0], feature_matrix[:, 1], s=70, c=labeled_array, cmap=cm.RdBu)
+    splot_orig.set_xlabel("feature 1")
+    splot_orig.set_ylabel("feature 2")
+    splot_orig.set_title("Original label assignment")
+    splot.set_xlabel("feature 1")
+    splot.set_ylabel("feature 2")
+    splot.set_title("Current label assignment")
+    scat = splot.scatter(feature_matrix[:, 0], feature_matrix[:, 1], s=70, c=labeled_array, cmap=cm.RdBu)
+    header = plt.figtext(0.5, 0.96, "Label propagation", weight="bold", size="large", ha="center")
+    ani = None
+
+    def init_scatter():
+        scat.set_array(labeled_array)
+
+    # Animation frame
+    def get_propagated_labels(t):
+        if t == 0:
+            raw_input()
         try:
-            #Y_new = Laplacian.dot(Alpha).dot(Y) + OneMinusAlpha.dot(Y_0)
-            Y_new = alpha * Laplacian.dot(Y) + (1 - alpha) * Y_0
-            if all(np.equal(Y, Y_new)):
-                break
-            Y = Y_new
+            Y_new = Laplacian * Alpha * Y_t + OneMinusAlpha * Y_0
+            if (euclidean(Y_t, Y_new) < 1e-6 or t >= max_iterations) and ani:
+                ani._stop()
+            np.copyto(Y_t, Y_new)
+            color_map = generate_color_map(np.array(Y_t.T), num_labeled_points, num_soft_labeled_points)
+            if t == 0:  # display first label assignment
+                scat_orig.set_array(color_map)
+            scat.set_array(color_map)
+            header.set_text("Label propagation. Iteration %i" % t)
         except KeyboardInterrupt:
-            break
-        print Y[-499: -1] ,
-        sys.stdout.flush()
-        raw_input()
-        # useful functions: numpy.put, numpy.putmask
+            return
+
+    ani = animation.FuncAnimation(fig, get_propagated_labels, init_func=init_scatter, interval=600)
+    plt.show()
     return None
 
 
+def normalize(M):
+    return (M - np.mean(M, 0)) / np.std(M, 0)
+
+
 def setup_feature_matrix(unlabeled_file_references, soft_labeled_path, labeled_file_references, feature_list,
-                         soft_labeled_sample_size, unlabeled_sample_size, class_sampling, class_labels=hcs_soft_labels, ignore_labels=[6]):
+                         soft_labeled_sample_size, unlabeled_sample_size, labeled_sample_size, class_sampling,
+                         alpha_labeled=0.95, alpha_unlabeled=0.95, alpha_soft_labeled=hcs_soft_label_alphas,
+                         class_labels=hcs_soft_labels, ignore_labels=[6], normalize_data=True):
     '''
     Reads files with unlabeled and labeled information, and creates the feature matrix with the features
     specified in the feature list
@@ -249,20 +274,17 @@ def setup_feature_matrix(unlabeled_file_references, soft_labeled_path, labeled_f
     '''
 
     # [TODO] parametrize this:
-    #alpha_labeled, alpha_unlabeled = 0.5, 0.95
-    #alpha_soft_labeled = {1: 0.1, 2: 0.2, 3: 0.3, 4: 0.4, 5: 0.5}
-    alpha_labeled, alpha_unlabeled = 0.95, 0.95
-    alpha_soft_labeled = {1: 0.95, 5: 0.95}
+    #alpha_labeled, alpha_unlabeled = 0.95, 0.95
+    #alpha_soft_labeled = {1: 0.95, 5: 0.95}
     alpha_vector = []
 
-    labeled_data = [read_arff_file(input_file, feature_list, ignore_labels=ignore_labels) for input_file in labeled_file_references]
+    labeled_data = [read_arff_file(input_file, feature_list, ignore_labels=ignore_labels)
+                    for input_file in labeled_file_references]
     labeled_points = np.concatenate(labeled_data)
-    labeled_points = get_sample(labeled_points, 8)  # ???
-    ___("%i labeled points" % len(labeled_points))
+    labeled_points = get_sample(labeled_points, labeled_sample_size)  # ???
+    ___("%i labeled points:\n\t%s" % (len(labeled_points), labeled_points[:, -1]))
 
     alpha_vector += [alpha_labeled] * len(labeled_points)
-
-    # [TODO]: remove next line when not testing
 
     soft_labeled_points = None
     if soft_labeled_path:
@@ -281,14 +303,14 @@ def setup_feature_matrix(unlabeled_file_references, soft_labeled_path, labeled_f
             soft_labeled_data = soft_labeled_data.values()
         soft_labeled_points = np.concatenate(soft_labeled_data)
         soft_labeled_alphas = [alpha_soft_labeled[label] for label in soft_labeled_points[:, -1]]
-        ___("%i soft labeled points" % len(soft_labeled_points))
+        ___("%i soft labeled points:\n\t%s" % (len(soft_labeled_points), soft_labeled_points[:, -1]))
         alpha_vector += soft_labeled_alphas
 
     unlabeled_data = [read_hcs_file(input_file, feature_list) for input_file in unlabeled_file_references]
     unlabeled_points = np.concatenate(unlabeled_data)
 
     unlabeled_points = get_sample(unlabeled_points, unlabeled_sample_size)  # ???
-    ___("%i unlabeled points" % len(unlabeled_points))
+    ___("%i unlabeled points:\n\t%s" % (len(unlabeled_points), unlabeled_points[:, -1]))
 
     alpha_vector += [alpha_unlabeled] * len(unlabeled_points)
 
@@ -296,7 +318,66 @@ def setup_feature_matrix(unlabeled_file_references, soft_labeled_path, labeled_f
         M = np.concatenate([labeled_points, unlabeled_points])
     else:
         M = np.concatenate([labeled_points, soft_labeled_points, unlabeled_points])
-    return (M, alpha_vector)
+
+    if normalize_data:
+        M = np.column_stack([normalize(M[:, :-1]), M[:, -1]])
+    return (M, alpha_vector, len(labeled_points), len(soft_labeled_points))
+
+
+def create_dummy_data1():
+    dummy_matrix = np.array(
+        [[0.80, 1.30, -1],
+         [0.78, 1.40, -1],
+         [4.60, 5.00, +1],
+         [5.10, 4.90, +1],
+         [0.00, 1.00, -1],
+         [1.00, 0.00, -1],
+         [0.50, 0.50, -1],
+         [4.00, 4.00, +1],
+         [3.00, 3.00, +1],
+         [2.60, 2.80, +1],
+         [4.80, 5.10,  0],  # 1
+         [0.50, 1.20,  0],
+         [1.10, 1.10,  0],
+         [4.30, 6.20,  0],  # 1
+         [0.00, 1.20,  0],
+         [4.90, 4.60,  0],  # 1
+         [2.48, 2.80,  0],  # ?
+         [2.55, 2.80,  0]]  # ?
+    )
+    alpha_vector = np.array([0.95] * 4 + [0.95] * 6 + [0.95] * 8)
+    return dummy_matrix, alpha_vector
+
+
+def get_uniform_sample(center, width, num_points):
+    randvals = np.random.rand(num_points, 2)
+    points = center + width * np.column_stack([randvals[:, 0] * np.sin(2 * np.pi * randvals[:, 1]), randvals[:, 0] * np.cos(2 * np.pi * randvals[:, 1])])
+    return points
+
+
+def create_dummy_data(labeled_points, soft_labeled_points, unlabeled_points, normalize_data=True):
+    center_labeled_inf, width_labeled_inf = [1.5, 1.2], 0.75
+    #center_labeled_inf, width_labeled_inf = [2.5, 2], 0.15
+    center_labeled_noninf, width_labeled_noninf = 4.5, 0.9
+    center_soft_inf, width_soft_inf = [1.4, 1.6], 1.4
+    center_soft_noninf, width_soft_noninf = 4.6, 1.2
+    #center_unlabeled1, width_unlabeled1 = 3.0, 1.0
+    #center_unlabeled2, width_unlabeled2 = 2.9, 0.1
+    center_unlabeled1, width_unlabeled1 = 3.0, 3.0  # 75%
+    center_unlabeled2, width_unlabeled2 = 3.0, 3.0  # 25%
+
+    M = np.column_stack((get_uniform_sample(center_labeled_inf, width_labeled_inf, labeled_points / 2), [1.0] * (labeled_points / 2)))
+    M = np.concatenate((M, np.column_stack((get_uniform_sample(center_labeled_noninf, width_labeled_noninf, labeled_points / 2), [-1.0] * (labeled_points / 2)))))
+    M = np.concatenate((M, np.column_stack((get_uniform_sample(center_soft_inf, width_soft_inf, soft_labeled_points / 2), [1.0] * (soft_labeled_points / 2)))))
+    M = np.concatenate((M, np.column_stack((get_uniform_sample(center_soft_noninf, width_soft_inf, 3), [1.0] * 3))))
+    M = np.concatenate((M, np.column_stack((get_uniform_sample(center_soft_noninf, width_soft_noninf, soft_labeled_points / 2 - 3), [-1.0] * (soft_labeled_points / 2 - 3)))))
+    M = np.concatenate((M, np.column_stack((get_uniform_sample(center_unlabeled1, width_unlabeled1, int(0.75 * unlabeled_points)), [0.0] * int(0.75 * unlabeled_points)))))
+    M = np.concatenate((M, np.column_stack((get_uniform_sample(center_unlabeled2, width_unlabeled2, unlabeled_points - int(0.75 * unlabeled_points)), [0.0] * (unlabeled_points - int(0.75 * unlabeled_points))))))
+
+    alpha_vector = np.array([0.5] * labeled_points + [0.85] * soft_labeled_points + [0.95] * unlabeled_points)
+    if normalize_data:
+        M = np.column_stack([normalize(M[:, :-1]), M[:, -1]])
+    return M, alpha_vector, labeled_points, soft_labeled_points
 
 
 def main(argv):
@@ -305,14 +386,20 @@ def main(argv):
     applies the label propagation algorithm iteratively
     '''
     unlabeled_file_references, soft_labeled_path, labeled_file_references, feature_list, soft_labeled_sample_size, \
-        unlabeled_sample_size, class_sampling, distance_metric, neighborhood_fn, alpha, max_iterations \
-        = process_cmdline(argv)
+        unlabeled_sample_size, labeled_sample_size, class_sampling, distance_metric, neighborhood_fn, alpha, \
+        max_iterations, test = process_cmdline(argv)
 
-    M, alpha_vector = setup_feature_matrix(unlabeled_file_references, soft_labeled_path, labeled_file_references,
-                                           feature_list, soft_labeled_sample_size, unlabeled_sample_size, class_sampling)
+    RandomState(7283)
+    seed(7283)
+    if test:
+        M, alpha_vector, labeled_points, soft_labeled_points = create_dummy_data(40, 180, 180, normalize_data=False)
+    else:
+        M, alpha_vector, labeled_points, soft_labeled_points = \
+            setup_feature_matrix(unlabeled_file_references, soft_labeled_path, labeled_file_references,
+                                 feature_list, soft_labeled_sample_size, unlabeled_sample_size,
+                                 labeled_sample_size, class_sampling, ignore_labels=['6'])
 
-    Y = propagate_labels_SSL(M[:, :-1], M[:, -1], distance_metric, neighborhood_fn, alpha_vector, max_iterations)
-    # ___("Alpha vector: %s" % alpha_vector)
+    Y = propagate_labels_SSL(M[:, :-1], M[:, -1], distance_metric, neighborhood_fn, alpha_vector, max_iterations, labeled_points, soft_labeled_points)
     return Y
 
 
@@ -321,18 +408,21 @@ def load_test():
     Creates and uses dummy data to test the label propagation algorithm
     '''
     unlabeled_file_references, soft_labeled_path, labeled_file_references, feature_list, soft_labeled_sample_size, \
-        unlabeled_sample_size, class_sampling, distance_metric, neighborhood_fn, alpha, max_iterations \
-        = generate_test_data()
+        unlabeled_sample_size, labeled_sample_size, class_sampling, distance_metric, neighborhood_fn, alpha, \
+        max_iterations, test = generate_test_data()
 
-    M, alpha_vector = setup_feature_matrix(unlabeled_file_references, soft_labeled_path, labeled_file_references,
-                                           feature_list, soft_labeled_sample_size, unlabeled_sample_size,
-                                           class_sampling, dummy_soft_labels, ignore_labels=['2', '3', '4', '6'])
+    M, alpha_vector, labeled_points, soft_labeled_points = \
+        setup_feature_matrix(unlabeled_file_references, soft_labeled_path, labeled_file_references,
+                             feature_list, soft_labeled_sample_size, unlabeled_sample_size,
+                             labeled_sample_size, class_sampling, alpha_labeled=0.95,
+                             alpha_unlabeled=0.95, alpha_soft_labeled=dummy_soft_label_alphas,
+                             class_labels=dummy_soft_labels, ignore_labels=['2', '3', '4', '6'])
 
     label_value_translation = {-1: 0, 1: -1, 5: 1}
     initial_labels = [label_value_translation[label] for label in M[:, -1]]
-    print initial_labels
-    Y = propagate_labels_SSL(M[:, :-1], initial_labels, distance_metric, neighborhood_fn, alpha_vector, max_iterations)
-    #return Y
+    Y = propagate_labels_SSL(M[:, :-1], initial_labels, distance_metric, neighborhood_fn, alpha_vector,
+                             max_iterations, labeled_points, soft_labeled_points)
+    return Y
 
 
 if __name__ == "__main__":

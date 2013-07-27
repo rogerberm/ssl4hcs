@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-2.5-1.40.13 (TeX Live 2013/dev) (format=pdflatex 2013.4.7)  23 JUL 2013 15:32
+This is pdfTeX, Version 3.1415926-2.5-1.40.13 (TeX Live 2013/dev) (format=pdflatex 2013.4.7)  24 JUL 2013 19:33
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1074,33 +1074,24 @@ e
 ))
 ABD: EveryShipout initializing macros
 LaTeX Info: Redefining \microtypecontext on input line 29.
-Package microtype Info: Generating PDF output.
-Package microtype Info: Character protrusion enabled (level 2).
-Package microtype Info: Using default protrusion set `alltext'.
-Package microtype Info: Automatic font expansion enabled (level 2),
-(microtype)             stretch: 20, shrink: 20, step: 1, non-selected.
-Package microtype Info: Using default expansion set `basictext'.
-Package microtype Info: No adjustment of tracking.
-Package microtype Info: No adjustment of interword spacing.
-Package microtype Info: No adjustment of character kerning.
 
-(/usr/share/texlive/texmf-dist/tex/latex/microtype/mt-ptm.cfg
-File: mt-ptm.cfg 2006/04/20 v1.7 microtype config. file: Times (RS)
-)
-(/usr/share/texlive/texmf-dist/tex/latex/microtype/mt-cmr.cfg
-File: mt-cmr.cfg 2011/04/09 v2.1 microtype config. file: Computer Modern Roman 
-(RS)
-)
+
+Package microtype Warning: `draft' option active.
+(microtype)                Disabling all micro-typographic extensions.
+(microtype)                This might lead to different line and page breaks.
+
 LaTeX Font Info:    Font shape `T1/ptm/bx/n' in size <9> not available
 (Font)              Font shape `T1/ptm/b/n' tried instead on input line 31.
 LaTeX Font Info:    Font shape `T1/ptm/bx/n' in size <12> not available
-(Font)              Font shape `T1/ptm/b/n' tried instead on input line 43.
+(Font)              Font shape `T1/ptm/b/n' tried instead on input line 44.
+LaTeX Font Info:    Font shape `T1/ptm/bx/n' in size <10.95> not available
+(Font)              Font shape `T1/ptm/b/n' tried instead on input line 55.
 LaTeX Font Info:    Font shape `T1/ptm/bx/n' in size <10> not available
-(Font)              Font shape `T1/ptm/b/n' tried instead on input line 51.
- [1
+(Font)              Font shape `T1/ptm/b/n' tried instead on input line 60.
+[1
 
-{/usr/share/texlive/texmf/fonts/map/pdftex/updmap/pdftex.map}] (./report_hcs.bb
-l [2]
+{/usr/share/texlive/texmf/fonts/map/pdftex/updmap/pdftex.map}]
+(./report_hcs.bbl [2]
 LaTeX Font Info:    Font shape `T1/ptm/bx/n' in size <20.74> not available
 (Font)              Font shape `T1/ptm/b/n' tried instead on input line 1.
 
@@ -1109,24 +1100,21 @@ bibitemlist
 
 ] (./report_hcs.aux) ) 
 Here is how much of TeX's memory you used:
- 16565 strings out of 495063
- 285348 string characters out of 3182195
- 474383 words of memory out of 3000000
- 19339 multiletter control sequences out of 15000+200000
- 48330 words of font info for 121 fonts, out of 3000000 for 9000
+ 16334 strings out of 495063
+ 281862 string characters out of 3182195
+ 481319 words of memory out of 3000000
+ 19223 multiletter control sequences out of 15000+200000
+ 40828 words of font info for 51 fonts, out of 3000000 for 9000
  14 hyphenation exceptions out of 8191
- 69i,12n,57p,449b,292s stack positions out of 5000i,500n,10000p,200000b,50000s
+ 69i,11n,76p,449b,677s stack positions out of 5000i,500n,10000p,200000b,50000s
 {/usr/share/texlive/texmf-dist/fonts/enc/dvips/base/8r.en
-c}</usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></us
-r/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy6.pfb></usr/share
-/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb></usr/share/texliv
-e/texmf-dist/fonts/type1/urw/times/utmb8a.pfb></usr/share/texlive/texmf-dist/fo
-nts/type1/urw/times/utmr8a.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/t
-imes/utmri8a.pfb>
-Output written on report_hcs.pdf (3 pages, 70114 bytes).
+c}</usr/share/texlive/texmf-dist/fonts/type1/urw/times/utmb8a.pfb></usr/share/t
+exlive/texmf-dist/fonts/type1/urw/times/utmr8a.pfb></usr/share/texlive/texmf-di
+st/fonts/type1/urw/times/utmri8a.pfb>
+Output written on report_hcs.pdf (3 pages, 51523 bytes).
 PDF statistics:
- 42 PDF objects out of 1000 (max. 8388607)
- 30 compressed objects within 1 object stream
+ 30 PDF objects out of 1000 (max. 8388607)
+ 21 compressed objects within 1 object stream
  0 named destinations out of 1000 (max. 500000)
- 30221 words of extra memory for PDF output out of 35830 (max. 10000000)
+ 13 words of extra memory for PDF output out of 10000 (max. 10000000)
 
