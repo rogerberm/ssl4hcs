@@ -7,13 +7,14 @@
 \usepackage{ifdraft}
 \usepackage{amsmath}
 \usepackage{microtype}
+\usepackage[comma, square, super]{natbib}
 \DisableLigatures{encoding = *, family = *}
 \newcommand{\TODO}[1]{\todo[size=\tiny]{#1}}
 \newcommand\imglabel[1]{\textbf{\textsf{#1}}}
 \renewcommand{\rmdefault}{ptm}
 
-\setlrmarginsandblock{3cm}{2.5cm}{*}
-\setulmarginsandblock{2.5cm}{2.5cm}{*}
+\setlrmarginsandblock{3cm}{3cm}{*}
+\setulmarginsandblock{3cm}{3cm}{*}
 \checkandfixthelayout
 
 \title{
@@ -21,8 +22,8 @@
 			as required by the Master program in Computational Biology and Bioinformatics - ETH Z\"urich}}}}
 \author{
 	\ifdraft{Roger Bermudez-Chacon\\Supervisor: Peter Horvath}
-	        {Róger Bermúdez-Chacón\thanks{Computational Biology and Bioinformatics Master program, ETH Z\"urich}\\
-			 Supervisor: Peter Horvath\thanks{Light Microscopy and Screening Centre, ETH Z\"urich}}
+	{Róger Bermúdez-Chacón\\\small Computational Biology and Bioinformatics Master program\\\\
+			Supervisor: Peter Horvath\\\small Light Microscopy and Screening Centre}\\\\ETH Zurich
 }
 \date{\today}
 
@@ -44,37 +45,88 @@ cases substitute it.
 \section{Introduction}
 Recent advancements in high-throughput microscopy and data analysis made possible to perform large 
 scale biological experiments and automatically evaluate them. For the detection of sub-cellular changes 
-caused by different perturbations in the cell (RNAi or drugs) often supervised machine learning (SML) 
+caused by different perturbations in the cell (RNAi or drugs), often supervised machine learning (SML) 
 is used. Reliable training of an SML method, however, requires significant effort from a field expert.
 
-As an alternative, semi-supervised machine learning (SSL) methods allow to make use of a larger amount of information,
-by exploiting both annotated information and the relative distribution of unannotated data on the feature space.
-\todo{expand this introduction?}
+As an alternative, semi-supervised machine learning (SSL) methods make use of information intrinsically found in the 
+entire data, both annotated and unannotated, thus allowing to make use of a larger amount of information
+by exploiting, alongside with the annotated data, the relative distribution of unannotated data on the feature space~\cite{chapelle2006semi}.
+This paradigm, under a few assumptions\todo{use footnote with assumptions or just reference to publication?}\footnote{Smoothness,
+Cluster, and Manifold assumptions, see~\cite[p.~4-6]{chapelle2006semi}},
+has proven valuable in exploring and classifying biological data in fields as diverse as drug-protein
+interactions~\cite{zheng2010semi}, gene expression~\cite{costa2007semi}, and \todo{expand this introduction?}medical diagnosis~\cite{bair2004semi}.
 
 \section{Materials and Methods}
 \subsection{High-content screening}
-A human genome-wide siRNA library was used to produce phenotypes of human cells with knocked-out \todo{confirm this is correct/well-written}genes. These cell cultures 
-were exposed to a genetically engineered fluorescent SFV strand
-\lipsum[27]
-\begin{description}
-	\item[Data sources]
+A human genome-wide siRNA library was used to produce human cell cultures with knocked-out
+\todo{confirm this is correct/well-written, explain this in more detail?}
+genes, stored in a collection of 55 16x24-well plates.
+These cell cultures were exposed to a genetically engineered fluorescent SFV strand, and the corresponding
+green fluorescent protein production on all of the cultures was tracked over time.
 
-	labeled and unlabeled datasources
-	\item[Tools] weka, numpy, scipy
-	\item[methods] label spreading
-\end{description}
+The protein expression was stopped at 4, 5, 6, and 7 hours after culture infection with SFV and microscopic pictures
+of the sample were obtained under a light microscope. Samples with no exposure to SFV were also analyzed as a control
+experiment, in the exact same manner as for the infected samples.
+\subsection{Image adquisition and analysis}
+For every sample at each infection stage, 9 tiled images were captured via a light microscope, by composing the
+green fluorescent signal of the produced protein, and a blue-colored image of the nuclei. All images were
+subsequently processed with an automatic random forest-based segmentation \todo{according to G. Balistreri. Confirm. Expand on this?}
+tool to identify individual cells from the images.
+
+With the mapping between microscopic pictures and individual segments representing cells, features for each cell were
+extracted with CellProfiler~\cite{carpenter2006cellprofiler}.
+A total of 93 features were retrieved and used in this experiment, corresponding to color intensity, area, shape, and texture descriptors.
+(For a complete list of the features used, see Appendix \ref{app:featurelist})
+
+\subsection{Annotated data}
+From the genome-wide information, a small subset of the data was manually annotated by an expert on SFV infection, by visually identifying cell phenotypes
+directly from the segmented microscopic images and cross-checking with the time annotation on the respective source plate,
+and classifying them into the different stages of infection. This manual process yielded
+3098 annotated cells.\footnote{A small number of imaging artifacts were also identified manually. However, accounting for such information was
+out of the scope of this work.}
+
+\subsection{Semi-supervised learning implementation}
+A graph-based label propagation (label spreading~\cite{zhou2004learning}) approach was followed. In this kind of approach, an undirected graph is built using the
+data points (cells) as vertices, and edges are created for all pairs of vertices that satisify a neighboring condition, 
+with weights proportional to the degree of relatedness or association between the pair of vertices.
+
+In the original formulation, labels are associated to the vertices corresponding to annotated data, and neutral labels to
+the unannotated data; then, in an iterative fashion, the labeled vertices propagate along the edges to their neighbors' labels,
+with a strength proportional to their relatedness (edge weight).
+
+In the present implementation, prior knowledge of the nature of the data was incorporated as an additional level of \emph{soft labeling}, to exploit
+the fact that, for a group of data points used as experimental control\footnote{Wild type cultures designated for plate effect monitoring, with no RNA interference applied.},
+the cells (vertices) can be tracked back to their experimental conditions, which have a direct influence on what specific phenotypes (labels) are more likely to occur.
+
+\subsubsection{Graph construction}
+\textcolor{gray}{\lipsum[32]}
+
+\subsubsection{Feature selection}
+\textcolor{gray}{\lipsum[88]}
+
+\subsubsection{Label propagation}
+\textcolor{gray}{\lipsum[44]}
 
 \section{Results}
-\lipsum[8]\todo{write results}
+\textcolor{gray}{\lipsum[8]}
 
 \section{Discussion}
-\lipsum[9]\todo{write results}
+\textcolor{gray}{\lipsum[9]}
 
 \section{Conclusions}
-\todo{fill in conclusions}
-\lipsum[3]
-\nocite{duda2001pattern, chapelle2006semi, hall2009weka, estes2007fields, banerjee2013high, carpenter2006cellprofiler}
+\textcolor{gray}{\lipsum[3]}
+
+%labeled and unlabeled datasources
+%	\item[Tools] weka, numpy, scipy
+%	\item[methods] label spreading
+%\end{description}
+
+%\nocite{duda2001pattern, chapelle2006semi, hall2009weka, estes2007fields, banerjee2013high, carpenter2006cellprofiler}
+\nocite{duda2001pattern}
 
 \bibliographystyle{ieeetr}  % orders by occurrence in the document
 \bibliography{references}
+\appendix
+\chapter{Features analyzed}\label{app:featurelist}
+[Table with cell/nuclei intensity, shape and Haralick~\cite{haralick1973textural} texture features...]
 \end{document}
