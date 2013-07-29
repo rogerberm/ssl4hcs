@@ -18,8 +18,9 @@
 \checkandfixthelayout
 
 \title{
-	Semi-supervised learning for phenotypic profiling of \mbox{high-content screens\ifdraft{ (DRAFT)}{\thanks{This project was held as a Lab Rotation in Computer Science,
-			as required by the Master program in Computational Biology and Bioinformatics - ETH Z\"urich}}}}
+	Semi-supervised learning for phenotypic profiling of \mbox{high-content screens\ifdraft{ (DRAFT)}{\thanks{This
+		project was held as a Lab Rotation in Computer Science, as required by the Master program in Computational
+		Biology and Bioinformatics - ETH Z\"urich}}}}
 \author{
 	\ifdraft{Roger Bermudez-Chacon\\Supervisor: Peter Horvath}
 	{Róger Bermúdez-Chacón\\\small Computational Biology and Bioinformatics Master program\\\\
@@ -30,11 +31,11 @@
 \begin{document}
 \maketitle
 \begin{abstract}
-Semi-supervised machine learning techniques are particularly useful in experiments where data annotation and classification
-is time- and resource-consuming or error-prone. In biological experiments this is often the case.
-Here, we apply a graph-based machine learning method to classify cells in different stages of infection with the Semliki Forest Virus (SFV),
-which features have been extracted from image analysis of fluorescence microscopy results, obtained in turn from a genome-wide
-high-content screening experiment.
+Semi-supervised machine learning techniques are particularly useful in experiments where data annotation and
+classification is time- and resource-consuming or error-prone. In biological experiments this is often the case.
+Here, we apply a graph-based machine learning method to classify cells in different stages of infection with the
+Semliki Forest Virus (SFV), which features have been extracted from image analysis of fluorescence microscopy results,
+obtained in turn from a genome-wide high-content screening experiment.
 The aim of this project is to investigate whether and to which extent intelligent control experiment design 
 combined with semi-supervised learning can reach the accuracy of a human annotator and/or in certain 
 cases substitute it.
@@ -50,11 +51,13 @@ is used. Reliable training of an SML method, however, requires significant effor
 
 As an alternative, semi-supervised machine learning (SSL) methods make use of information intrinsically found in the 
 entire data, both annotated and unannotated, thus allowing to make use of a larger amount of information
-by exploiting, alongside with the annotated data, the relative distribution of unannotated data on the feature space~\cite{chapelle2006semi}.
-This paradigm, under a few assumptions\todo{use footnote with assumptions or just reference to publication?}\footnote{Smoothness,
-Cluster, and Manifold assumptions, see~\cite[p.~4-6]{chapelle2006semi}},
+by exploiting, alongside with the annotated data, the relative distribution of unannotated data on the feature
+space~\cite{chapelle2006semi}.
+This paradigm, under a few assumptions\todo{use footnote with assumptions or just reference to
+publication?}\footnote{Smoothness, Cluster, and Manifold assumptions, see~\cite[p.~4-6]{chapelle2006semi}},
 has proven valuable in exploring and classifying biological data in fields as diverse as drug-protein
-interactions~\cite{zheng2010semi}, gene expression~\cite{costa2007semi}, and \todo{expand this introduction?}medical diagnosis~\cite{bair2004semi}.
+interactions~\cite{zheng2010semi}, gene expression~\cite{costa2007semi}, and \todo{expand this introduction?}medical
+diagnosis~\cite{bair2004semi}.
 
 \section{Materials and Methods}
 \subsection{High-content screening}
@@ -70,33 +73,36 @@ experiment, in the exact same manner as for the infected samples.
 \subsection{Image adquisition and analysis}
 For every sample at each infection stage, 9 tiled images were captured via a light microscope, by composing the
 green fluorescent signal of the produced protein, and a blue-colored image of the nuclei. All images were
-subsequently processed with an automatic random forest-based segmentation \todo{according to G. Balistreri. Confirm. Expand on this?}
-tool to identify individual cells from the images.
+subsequently processed with an automatic random forest-based segmentation \todo{according to G. Balistreri. Confirm.
+Expand on this?} tool to identify individual cells from the images.
 
 With the mapping between microscopic pictures and individual segments representing cells, features for each cell were
 extracted with CellProfiler~\cite{carpenter2006cellprofiler}.
-A total of 93 features were retrieved and used in this experiment, corresponding to color intensity, area, shape, and texture descriptors.
-(For a complete list of the features used, see Appendix \ref{app:featurelist})
+A total of 93 features were retrieved and used in this experiment, corresponding to color intensity, area, shape, and
+texture descriptors. (For a complete list of the features used, see Appendix \ref{app:featurelist})
 
 \subsection{Annotated data}
-From the genome-wide information, a small subset of the data was manually annotated by an expert on SFV infection, by visually identifying cell phenotypes
-directly from the segmented microscopic images and cross-checking with the time annotation on the respective source plate,
-and classifying them into the different stages of infection. This manual process yielded
-3098 annotated cells.\footnote{A small number of imaging artifacts were also identified manually. However, accounting for such information was
-out of the scope of this work.}
+From the genome-wide information, a small subset of the data was manually annotated by an expert on SFV infection, by
+visually identifying cell phenotypes directly from the segmented microscopic images and cross-checking with the time
+annotation on the respective source plate, and classifying them into the different stages of infection. This manual
+process yielded 3098 annotated cells.\footnote{A small number of imaging artifacts were also identified manually.
+However, accounting for such information was out of the scope of this work.}
 
 \subsection{Semi-supervised learning implementation}
-A graph-based label propagation (label spreading~\cite{zhou2004learning}) approach was followed. In this kind of approach, an undirected graph is built using the
-data points (cells) as vertices, and edges are created for all pairs of vertices that satisify a neighboring condition, 
-with weights proportional to the degree of relatedness or association between the pair of vertices.
+A graph-based label propagation (label spreading~\cite{zhou2004learning}) approach was followed. In this kind of
+approach, an undirected graph is built using the data points (cells) as vertices, and edges are created for all pairs
+of vertices that satisify a neighboring condition, with weights proportional to the degree of relatedness or
+association between the pair of vertices.
 
-In the original formulation, labels are associated to the vertices corresponding to annotated data, and neutral labels to
-the unannotated data; then, in an iterative fashion, the labeled vertices propagate along the edges to their neighbors' labels,
-with a strength proportional to their relatedness (edge weight).
+In the original formulation, labels are associated to the vertices corresponding to annotated data, and neutral labels
+to the unannotated data; then, in an iterative fashion, the labeled vertices propagate along the edges to their
+neighbors' labels, with a strength proportional to their relatedness (edge weight).
 
-In the present implementation, prior knowledge of the nature of the data was incorporated as an additional level of \emph{soft labeling}, to exploit
-the fact that, for a group of data points used as experimental control\footnote{Wild type cultures designated for plate effect monitoring, with no RNA interference applied.},
-the cells (vertices) can be tracked back to their experimental conditions, which have a direct influence on what specific phenotypes (labels) are more likely to occur.
+In the present implementation, prior knowledge of the nature of the data was incorporated as an additional level of
+\emph{soft labeling}, to exploit the fact that, for a group of data points used as experimental control\footnote{Wild
+type cultures designated for plate effect monitoring, with no RNA interference applied.}, the cells (vertices) can be
+tracked back to their experimental conditions, which have a direct influence on what specific phenotypes (labels)
+are more likely to occur.
 
 \subsubsection{Graph construction}
 \textcolor{gray}{\lipsum[32]}
@@ -121,7 +127,6 @@ the cells (vertices) can be tracked back to their experimental conditions, which
 %	\item[methods] label spreading
 %\end{description}
 
-%\nocite{duda2001pattern, chapelle2006semi, hall2009weka, estes2007fields, banerjee2013high, carpenter2006cellprofiler}
 \nocite{duda2001pattern}
 
 \bibliographystyle{ieeetr}  % orders by occurrence in the document
