@@ -19,8 +19,7 @@ from scipy.spatial.distance import pdist, squareform, euclidean
 from utils import parentdir, get_sample, generate_test_data, get_files, \
     hcs_labels, hcs_soft_labels, hcs_soft_label_alphas, dummy_soft_labels, dummy_soft_label_alphas
 import matplotlib.pyplot as plt
-from matplotlib import animation
-from matplotlib import cm
+from matplotlib import animation, cm
 
 quiet = False
 
@@ -392,12 +391,13 @@ def main(argv):
     RandomState(7283)
     seed(7283)
     if test:
-        M, alpha_vector, labeled_points, soft_labeled_points = create_dummy_data(40, 180, 180, normalize_data=False)
+        M, alpha_vector, labeled_points, soft_labeled_points = create_dummy_data(40, 180, 180, normalize_data=True)
     else:
         M, alpha_vector, labeled_points, soft_labeled_points = \
             setup_feature_matrix(unlabeled_file_references, soft_labeled_path, labeled_file_references,
-                                 feature_list, soft_labeled_sample_size, unlabeled_sample_size,
-                                 labeled_sample_size, class_sampling, ignore_labels=['6'])
+                                 feature_list, soft_labeled_sample_size, unlabeled_sample_size, 200,
+                                 # labeled_sample_size,
+                                 class_sampling, ignore_labels=['6'])
 
     Y = propagate_labels_SSL(M[:, :-1], M[:, -1], distance_metric, neighborhood_fn, alpha_vector, max_iterations, labeled_points, soft_labeled_points)
     return Y

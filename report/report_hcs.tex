@@ -7,13 +7,14 @@
 \usepackage{ifdraft}
 \usepackage{amsmath}
 \usepackage{microtype}
+\usepackage{listings}
 \usepackage[comma, square, super]{natbib}
 \DisableLigatures{encoding = *, family = *}
 \newcommand{\TODO}[1]{\todo[size=\tiny]{#1}}
 \newcommand\imglabel[1]{\textbf{\textsf{#1}}}
 \renewcommand{\rmdefault}{ptm}
 
-\setlrmarginsandblock{3cm}{3cm}{*}
+\setlrmarginsandblock{2.5cm}{2.5cm}{*}
 \setulmarginsandblock{3cm}{3cm}{*}
 \checkandfixthelayout
 
@@ -63,52 +64,140 @@ diagnosis~\cite{bair2004semi}.
 \subsection{High-content screening}
 A human genome-wide siRNA library was used to produce human cell cultures with knocked-out
 \todo{confirm this is correct/well-written, explain this in more detail?}
-genes, stored in a collection of 55 16x24-well plates.
+genes, stored in a collection of 55 384-well plates spanning the entire genome. 
 These cell cultures were exposed to a genetically engineered fluorescent SFV strand, and the corresponding
-green fluorescent protein production on all of the cultures was tracked over time.
+green fluorescent protein production on all of the cultures was tracked over time. \todo{ask how many} $K$ repetitions
+of this experiment were carried out.
 
-The protein expression was stopped at 4, 5, 6, and 7 hours after culture infection with SFV and microscopic pictures
-of the sample were obtained under a light microscope. Samples with no exposure to SFV were also analyzed as a control
-experiment, in the exact same manner as for the infected samples.
+The protein expression was stopped at different time points after culture infection with SFV, for all siRNA-mediated
+phenotypes, and microscopic pictures of the sample were obtained under a light microscope. Samples with no exposure
+to SFV were also analyzed as a control experiment, in the exact same manner as for the infected samples.
+
 \subsection{Image adquisition and analysis}
 For every sample at each infection stage, 9 tiled images were captured via a light microscope, by composing the
 green fluorescent signal of the produced protein, and a blue-colored image of the nuclei. All images were
-subsequently processed with an automatic random forest-based segmentation \todo{according to G. Balistreri. Confirm.
-Expand on this?} tool to identify individual cells from the images.
+subsequently processed with an automatic \todo{according to G. Balistreri. Confirm. Expand on this?} random
+forest-based segmentation tool to identify individual cells from the images.
 
-With the mapping between microscopic pictures and individual segments representing cells, features for each cell were
-extracted with CellProfiler~\cite{carpenter2006cellprofiler}.
+With the mapping between microscopic pictures and individual image segments representing cells, features for each cell
+were extracted with CellProfiler~\cite{carpenter2006cellprofiler}.
 A total of 93 features were retrieved and used in this experiment, corresponding to color intensity, area, shape, and
-texture descriptors. (For a complete list of the features used, see Appendix \ref{app:featurelist})
+texture descriptors. (For the complete list of features extracted, see Appendix \ref{app:featurelist})
+
+\subsection{Unannotated data}
+The above process was performed automatically on the \todo{replace with actual number} $55 \cdot 384 \cdot 9 \cdot K$
+images retrieved from the siRNA-mediated phenotypes. All 93 features\footnote{In total, 95 features were extracted
+from the images. Spatial coordinates, however, were regarded as of little, if any value for data analysis in this
+work.} were extracted as floating point values, and stored in text files, one line per cell. Unlabeled information for
+\todo{figure out this number} $M$ cells was collected by this process.
 
 \subsection{Annotated data}
 From the genome-wide information, a small subset of the data was manually annotated by an expert on SFV infection, by
 visually identifying cell phenotypes directly from the segmented microscopic images and cross-checking with the time
 annotation on the respective source plate, and classifying them into the different stages of infection. This manual
-process yielded 3098 annotated cells.\footnote{A small number of imaging artifacts were also identified manually.
-However, accounting for such information was out of the scope of this work.}
+point-and-click process yielded \todo{software reference for this?} 3098 annotated cells.\footnote{A small number of
+imaging artifacts were also identified manually. However, accounting for such information was out of the scope of
+this work.}
+
+\subsection{Control data}
+As control cultures, 8 plates treated with a control siRNA that has no effect on the expressed phenotype of the cells
+were used. Control plates not exposed to SFV, as well as infected plates analyzed at 4, 5, 6, and 7 hours after
+infection, were used to retrieve control information during the time course. The exact same image analysis and
+feature extraction procedure described for the unannotated cultures was performed on these plates. 
 
 \subsection{Semi-supervised learning implementation}
 A graph-based label propagation (label spreading~\cite{zhou2004learning}) approach was followed. In this kind of
 approach, an undirected graph is built using the data points (cells) as vertices, and edges are created for all pairs
-of vertices that satisify a neighboring condition, with weights proportional to the degree of relatedness or
-association between the pair of vertices.
+of vertices that satisify a neighboring condition, with weights proportional to some measurement of association
+between the pair of vertices. This degree of association is often assumed as related to the distance
+between the data points in the n-dimensional feature space, in a linear, exponential, or Gaussian fashion, among
+others, and can be either limited in space (k-nearest neighbors, cutoff distance, ...), or consist of a
+complete graph that considers all possible pairwise relationships.
 
 In the original formulation, labels are associated to the vertices corresponding to annotated data, and neutral labels
-to the unannotated data; then, in an iterative fashion, the labeled vertices propagate along the edges to their
-neighbors' labels, with a strength proportional to their relatedness (edge weight).
+likewise to the unannotated data; then, in an iterative fashion, the labeled vertices propagate along the edges to
+their neighbors' labels, and compete against the propagation of other labeled vertices with a strength proportional to
+their relatedness (edge weight $W$).
 
 In the present implementation, prior knowledge of the nature of the data was incorporated as an additional level of
-\emph{soft labeling}, to exploit the fact that, for a group of data points used as experimental control\footnote{Wild
-type cultures designated for plate effect monitoring, with no RNA interference applied.}, the cells (vertices) can be
-tracked back to their experimental conditions, which have a direct influence on what specific phenotypes (labels)
-are more likely to occur.
+\emph{soft labeling}, to exploit the fact that, for data points taken from the experimental control, the cells
+(vertices) can be tracked back to their experimental conditions and time course, which have a direct influence on what
+specific phenotypes (labels) are more likely to occur.
 
-\subsubsection{Graph construction}
-\textcolor{gray}{\lipsum[32]}
+\subsubsection{Development and runtime environment}
+To read and analyze the data, a script was coded in Python 2.7.4. Extensive use of the open source libraries
+\texttt{numpy} and \texttt{scipy} were used for matrix and numerical manipulation, as well as \texttt{matplotlib} for
+data visualization.
+
+Many options for this script are customizable via command line parameters. Appendix \ref{app:codehelp} includes a
+description of all the possible parameters and a quick user guide.
 
 \subsubsection{Feature selection}
-\textcolor{gray}{\lipsum[88]}
+The values for all the features from the annotated cells were analyzed with Weka \cite{hall2009weka}. The InfoGain
+attribute evaluator was used to determine the information gain ratio for each feature, and features with a score of
+\todo{run weka again} above $F$ were chosen as the selected dimensions to represent the data for further analysis.
+
+Due to the heterogeneity on the range of values between the selected features, spanning \todo{how many?}
+several orders of magnitude, normalization of the data was required. The relative InfoGain score among the group of
+selected features was used as a weight for feature normalization, so that when pairwise distance calculations were 
+performed over the reduced \todo{how many features selected?}$g$-dimensional space, each feature would reflect its
+relative importance.
+
+The selected features were: \todo{make table} feature1, feature2, feature3, feature4. 
+
+\begin{figure}[here]
+\centering
+\begin{tabular}{cr}
+	Feature & Relative score\\
+	\hline
+	feature1 & 0.32\\
+	feature2 & 0.33\\
+	feature3 & 0.11
+\end{tabular}
+\end{figure}
+\subsubsection{Data pre-processing}
+\todo{fill this table with actual values}
+Text files in both \texttt{arff} and \texttt{txt} formats containing feature information for labeled, soft-labeled,
+and unlabeled data were read into a feature matrix $M$ ($n$ data points $\times m$ features).
+
+The \texttt{arff} files containing \emph{labeled data} were read and loaded into the feature matrix, by filtering the
+read fields to include only the features obtained in the feature selection phase. The possible classes or labels are
+loaded from the \texttt{arf{}f} file by parsing the line starting with \texttt{@attribute class} (this prefix can be
+overriden via the \texttt{-{}-label-line-prefix} parameter in the command line). As a parameter to the program, a list
+of ignored labels can be also passed with the option \texttt{-{}-ignored-labels}. Data points annotated with any of
+these label identifiers will be left out of the feature matrix. No further sampling was performed over the labeled
+data, i.e. all remaining (non-ignored) data points were kept.
+
+The \texttt{txt} files containing \emph{soft-labeled data} were read a similar way, except there was no need for
+parsing any formatting of the files. Each line in these \texttt{txt} files corresponds to a cell, and contains the
+values for the features, space-separated, in the same ordering as the labeled files. To assign actual soft labels, the
+relative file location in the file system was used as follows: the user indicates a root directory with all the 
+soft-labeled data, and the files are expected in differents directories within, which are internally mapped 
+(via a python dictionary) to the actual labels.
+
+The \texttt{txt} files containing \emph{unlabeled data} were read exactly as described above for the soft-labeled
+data. A default neutral label was assigned to all entries read from this files.
+
+Due to the massive amount of information, sampling parameters over the soft-labeled and unlabeled data were
+implemented. The command-line parameter \texttt{-{}-num-samples N} controls how many data points to use from both
+soft-labeled and unlabeled data together ($N/2$ each). An additional flag parameter \texttt{-{}-class-sampling}
+indicates that the script must sample the soft-labeled data uniformly over classes, to avoid sampling bias due to
+large differences between the number of data points on each class.
+
+As an outcome of this pre-processing step, the feature matrix containing the values of the selected features
+for the labeled, soft-labeled, and unlabeled cells (after sampling, when specified) was returned, along with
+the \todo{explain how to construct this}initial label matrix.
+
+\subsubsection{Data normalization}
+\lipsum[75]
+
+\subsubsection{Graph construction}
+The graph was internally represented by its weight matrix $\mathbf{W}$ ($\mathbf{W}_{ij}>0$ if there exists
+an edge between the vertices $x_i$ and $x_j$, zero otherwise), plus a $n \times m$
+($n$ cells, $m$ possible labels or classes) label matrix $Y$ , with valid values ranging from $0$ to $1$. A value
+of $Y_{i,j}=1$ represents complete confidence that the $i$-th cell in the data set, belongs to the $j$-th
+phenotypic class of cells. Likewise, a value of $0$ indicates absolute disbelief that a cell corresponds to a
+class, and values of $0.5$ indicate complete uncertainty about class membership.
 
 \subsubsection{Label propagation}
 \textcolor{gray}{\lipsum[44]}
@@ -133,5 +222,83 @@ are more likely to occur.
 \bibliography{references}
 \appendix
 \chapter{Features analyzed}\label{app:featurelist}
+\todo{format this}
+\begin{figure}[here]
+\centering
+\begin{tabular}{rl}
+	1:2 & nuclei location\\
+
+	3 & green mean intensity nuclei\\
+	4 & green std intensity nucleii\\
+
+	5 & green mean intensity cells\\
+	6 & green std intensity cells\\
+
+	7 & blue mean intensity nuclei\\
+	8 & blue std intensity nuclei\\
+
+	9 & blue mean intensity cells\\
+	10 & blue std intensity cells\\
+
+% shape descriptiors
+	11:20 & AreaShape\\
+
+
+% texture scale 3
+	21:35 & nuclei texture green\\
+	36:50 & nuclei texture blue\\
+	51:65 & cell texture green\\
+
+% texture scale 5
+	66:80 & nuclei texture green\\
+	81:95 & cell texture green
+\end{tabular}
+\end{figure}
 [Table with cell/nuclei intensity, shape and Haralick~\cite{haralick1973textural} texture features...]
+\chapter{Script parameters and help}\label{app:codehelp}
+\small
+\todo{up to date?}
+\begin{verbatim}
+$ python hcs.py -h
+usage: hcs.py [-h] [-t] [-l LABELED_FILE [LABELED_FILE ...]]
+              [-u UNLABELED_FILE [UNLABELED_FILE ...]] [-s SOFT_LABELED_PATH]
+              [-L NUM_LABELED_POINTS] [-n NUM_SAMPLES] [-c]
+              [--max-iterations MAX_ITERATIONS] [-d WIDTH]
+              [-nf {exp,knn3,knn4,knn5,knn6}]
+              [-dm {euclidean,cityblock,cosine,sqeuclidean,hamming,chebyshev}]
+              [-f FEATURE_INDEX [FEATURE_INDEX ...]] [-q]
+
+Label propagation
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -t, --test            Performs a test run.
+  -l LABELED_FILE [LABELED_FILE ...], --labeled LABELED_FILE [LABELED_FILE ...]
+                        Labeled files.
+  -u UNLABELED_FILE [UNLABELED_FILE ...], --unlabeled UNLABELED_FILE [UNLABELED_FILE ...]
+                        Unlabeled files.
+  -s SOFT_LABELED_PATH, --soft-labeled SOFT_LABELED_PATH
+                        Path to soft labeled files. One directory per label
+                        expected.
+  -L NUM_LABELED_POINTS, --num-labeled NUM_LABELED_POINTS
+                        Number of labeled data points to use. Default: use all
+                        available
+  -n NUM_SAMPLES, --num-samples NUM_SAMPLES
+                        Number of samples. Default: 3000
+  -c, --class-sampling  Distributes the number of samples given by
+                        [NUM_SAMPLES] uniformly over all soft classes
+  --max-iterations MAX_ITERATIONS
+                        Maximum number of iterations. Default: 1000
+  -d WIDTH, --display-columns WIDTH
+                        Max width used for matrix display on console
+  -nf {exp,knn3,knn4,knn5,knn6}, --neighborhood-function {exp,knn3,knn4,knn5,knn6}
+                        Neighborhood function to use. Default: exp
+  -dm {...}, --distance-metric {euclidean,cityblock,cosine,sqeuclidean,hamming,chebyshev}
+                        Metric for calculating pairwise distances. Default:
+                        euclidean
+  -f FEATURE_INDEX [FEATURE_INDEX ...], --features FEATURE_INDEX [FEATURE_INDEX ...]
+                        Selected feature indices (as given by the labeled
+                        data).
+  -q, --quiet           Displays progress and messages.
+\end{verbatim}
 \end{document}

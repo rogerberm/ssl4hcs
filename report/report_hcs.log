@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-2.4-1.40.13 (TeX Live 2012/Debian) (format=pdflatex 2013.7.29)  29 JUL 2013 19:56
+This is pdfTeX, Version 3.1415926-2.4-1.40.13 (TeX Live 2012/Debian) (format=pdflatex 2013.7.29)  31 JUL 2013 01:27
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -950,25 +950,50 @@ Package microtype Info: Loading configuration file microtype.cfg.
 (/usr/share/texlive/texmf-dist/tex/latex/microtype/microtype.cfg
 File: microtype.cfg 2010/01/10 v2.4 microtype main configuration file (RS)
 ))
+(/usr/share/texlive/texmf-dist/tex/latex/listings/listings.sty
+\lst@mode=\count177
+\lst@gtempboxa=\box40
+\lst@token=\toks42
+\lst@length=\count178
+\lst@currlwidth=\dimen204
+\lst@column=\count179
+\lst@pos=\count180
+\lst@lostspace=\dimen205
+\lst@width=\dimen206
+\lst@newlines=\count181
+\lst@lineno=\count182
+\lst@maxwidth=\dimen207
+
+(/usr/share/texlive/texmf-dist/tex/latex/listings/lstmisc.sty
+File: lstmisc.sty 2007/02/22 1.4 (Carsten Heinz)
+\c@lstnumber=\count183
+\lst@skipnumbers=\count184
+\lst@framebox=\box41
+)
+(/usr/share/texlive/texmf-dist/tex/latex/listings/listings.cfg
+File: listings.cfg 2007/02/22 1.4 listings configuration
+))
+Package: listings 2007/02/22 1.4 (Carsten Heinz)
+
 (/usr/share/texlive/texmf-dist/tex/latex/natbib/natbib.sty
 Package: natbib 2010/09/13 8.31b (PWD, AO)
 \bibhang=\skip192
 \bibsep=\skip193
 LaTeX Info: Redefining \cite on input line 694.
-\c@NAT@ctr=\count177
+\c@NAT@ctr=\count185
 )
 
 ******************************************************
 Stock height and width: 845.04684pt by 597.50787pt
 Top and edge trims: 0pt and 0pt
 Page height and width: 845.04684pt by 597.50787pt
-Text height and width: 682pt by 426pt
-Spine and edge margins: 85.35826pt and 85.35826pt
+Text height and width: 682pt by 455pt
+Spine and edge margins: 71.13188pt and 71.13188pt
 Upper and lower margins: 85.35826pt and 77.68858pt
 Headheight and headsep: 12pt and 18.06749pt
 Footskip: 25.29494pt
 Columnsep and columnseprule: 10pt and 0pt
-Marginparsep and marginparwidth: 7pt and 71.35826pt
+Marginparsep and marginparwidth: 7pt and 57.13188pt
 Sidecapsep and sidecapwidth: 7pt and 63pt
 Sidebarhsep and sidebarwidth: 7pt and 63pt
 Sidebarvsep and sidebartopsep: 12pt and 0pt
@@ -980,35 +1005,35 @@ Sidefootvsep and sidefootheight: 12pt and 596.39996pt
 (./report_hcs.aux)
 \openout1 = `report_hcs.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 30.
-LaTeX Font Info:    ... okay on input line 30.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 30.
-LaTeX Font Info:    ... okay on input line 30.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 30.
-LaTeX Font Info:    ... okay on input line 30.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 30.
-LaTeX Font Info:    ... okay on input line 30.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 30.
-LaTeX Font Info:    ... okay on input line 30.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 30.
-LaTeX Font Info:    ... okay on input line 30.
-LaTeX Font Info:    Try loading font information for T1+ptm on input line 30.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 32.
+LaTeX Font Info:    ... okay on input line 32.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 32.
+LaTeX Font Info:    ... okay on input line 32.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 32.
+LaTeX Font Info:    ... okay on input line 32.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 32.
+LaTeX Font Info:    ... okay on input line 32.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 32.
+LaTeX Font Info:    ... okay on input line 32.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 32.
+LaTeX Font Info:    ... okay on input line 32.
+LaTeX Font Info:    Try loading font information for T1+ptm on input line 32.
  (/usr/share/texlive/texmf-dist/tex/latex/psnfss/t1ptm.fd
 File: t1ptm.fd 2001/06/04 font definitions for T1/ptm.
 )
 (/usr/share/texlive/texmf-dist/tex/context/base/supp-pdf.mkii
 [Loading MPS to PDF converter (version 2006.09.02).]
-\scratchcounter=\count178
-\scratchdimen=\dimen204
-\scratchbox=\box40
-\nofMPsegments=\count179
-\nofMParguments=\count180
-\everyMPshowfont=\toks42
-\MPscratchCnt=\count181
-\MPscratchDim=\dimen205
-\MPnumerator=\count182
-\makeMPintoPDFobject=\count183
-\everyMPtoPDFconversion=\toks43
+\scratchcounter=\count186
+\scratchdimen=\dimen208
+\scratchbox=\box42
+\nofMPsegments=\count187
+\nofMParguments=\count188
+\everyMPshowfont=\toks43
+\MPscratchCnt=\count189
+\MPscratchDim=\dimen209
+\MPnumerator=\count190
+\makeMPintoPDFobject=\count191
+\everyMPtoPDFconversion=\toks44
 ) (/usr/share/texlive/texmf-dist/tex/generic/oberdiek/pdftexcmds.sty
 Package: pdftexcmds 2011/11/29 v0.20 Utility functions of pdfTeX for LuaTeX (HO
 )
@@ -1049,71 +1074,106 @@ File: epstopdf-sys.cfg 2010/07/13 v1.3 Configuration of (r)epstopdf for TeX Liv
 e
 ))
 ABD: EveryShipout initializing macros
-LaTeX Info: Redefining \microtypecontext on input line 30.
+LaTeX Info: Redefining \microtypecontext on input line 32.
 
 
 Package microtype Warning: `draft' option active.
 (microtype)                Disabling all micro-typographic extensions.
 (microtype)                This might lead to different line and page breaks.
 
+\c@lstlisting=\count192
 LaTeX Font Info:    Font shape `T1/ptm/bx/n' in size <9> not available
-(Font)              Font shape `T1/ptm/b/n' tried instead on input line 32.
+(Font)              Font shape `T1/ptm/b/n' tried instead on input line 34.
 LaTeX Font Info:    Font shape `T1/ptm/bx/n' in size <12> not available
-(Font)              Font shape `T1/ptm/b/n' tried instead on input line 45.
+(Font)              Font shape `T1/ptm/b/n' tried instead on input line 47.
 
-LaTeX Warning: Marginpar on page 1 moved by 45.6448pt.
+LaTeX Warning: Marginpar on page 1 moved by 79.5798pt.
 
 LaTeX Font Info:    Font shape `T1/ptm/bx/n' in size <10.95> not available
-(Font)              Font shape `T1/ptm/b/n' tried instead on input line 60.
+(Font)              Font shape `T1/ptm/b/n' tried instead on input line 64.
 
-LaTeX Warning: Marginpar on page 1 moved by 5.69414pt.
+Overfull \hbox (2.15729pt too wide) in paragraph at lines 66--66
+\T1/ptm/m/n/10 correct/well- |
+ []
+
+
+Overfull \hbox (2.15729pt too wide) in paragraph at lines 66--66
+\T1/ptm/m/n/10 correct/well- |
+ []
+
+
+Overfull \hbox (2.15729pt too wide) in paragraph at lines 66--66
+\T1/ptm/m/n/10 correct/well- |
+ []
+
+
+Overfull \hbox (2.15729pt too wide) in paragraph at lines 66--66
+\T1/ptm/m/n/10 correct/well- |
+ []
+
+
+LaTeX Warning: Marginpar on page 1 moved by 51.62914pt.
+
+
+LaTeX Warning: Marginpar on page 1 moved by 107.20894pt.
+
+
+LaTeX Warning: Marginpar on page 1 moved by 22.80241pt.
 
 [1
 
 {/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}]
+
+LaTeX Warning: Marginpar on page 2 moved by 19.5798pt.
+
 LaTeX Font Info:    Font shape `T1/ptm/bx/n' in size <10> not available
-(Font)              Font shape `T1/ptm/b/n' tried instead on input line 101.
- [2]
+(Font)              Font shape `T1/ptm/b/n' tried instead on input line 127.
+LaTeX Font Info:    Try loading font information for T1+cmtt on input line 129.
 
-Package natbib Warning: Citation `duda2001pattern' undefined on input line 125.
+(/usr/share/texlive/texmf-dist/tex/latex/base/t1cmtt.fd
+File: t1cmtt.fd 1999/05/25 v2.5h Standard LaTeX font definitions
+) [2]
+
+LaTeX Warning: Marginpar on page 3 moved by 9.6448pt.
 
 
-(./report_hcs.bbl [3]
+LaTeX Warning: Marginpar on page 3 moved by 31.5798pt.
+
+[3] (./report_hcs.bbl [4]
 LaTeX Font Info:    Font shape `T1/ptm/bx/n' in size <20.74> not available
 (Font)              Font shape `T1/ptm/b/n' tried instead on input line 1.
-) [4
+) [5
 
 ]
 LaTeX Font Info:    Font shape `T1/ptm/bx/n' in size <17.28> not available
-(Font)              Font shape `T1/ptm/b/n' tried instead on input line 130.
+(Font)              Font shape `T1/ptm/b/n' tried instead on input line 224.
+ [6
 
+] [7
 
-Package natbib Warning: There were undefined citations.
-
-[5
-
-] (./report_hcs.aux
-
-Package natbib Warning: Citation(s) may have changed.
-(natbib)                Rerun to get citations correct.
-
-) ) 
+] (./report_hcs.aux) ) 
 Here is how much of TeX's memory you used:
- 16677 strings out of 495059
- 284328 string characters out of 3182030
- 487255 words of memory out of 3000000
- 19566 multiletter control sequences out of 15000+200000
- 53895 words of font info for 62 fonts, out of 3000000 for 9000
+ 18116 strings out of 495059
+ 305954 string characters out of 3182030
+ 527016 words of memory out of 3000000
+ 20985 multiletter control sequences out of 15000+200000
+ 55448 words of font info for 67 fonts, out of 3000000 for 9000
  14 hyphenation exceptions out of 8191
- 69i,12n,76p,449b,677s stack positions out of 5000i,500n,10000p,200000b,50000s
-{/usr/share/texlive/texmf-dist/fonts/enc/dvips/base/8r.enc}</usr/share/texli
-ve/texmf-dist/fonts/type1/urw/times/utmb8a.pfb></usr/share/texlive/texmf-dist/f
-onts/type1/urw/times/utmr8a.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/
-times/utmri8a.pfb>
-Output written on report_hcs.pdf (5 pages, 56307 bytes).
+ 69i,11n,76p,449b,685s stack positions out of 5000i,500n,10000p,200000b,50000s
+ </home/roger/.texmf-var/fonts/pk/ljfour/jknappen/ec/ectt
+0900.600pk> </home/roger/.texmf-var/fonts/pk/ljfour/jknappen/ec/ectt1000.600pk>
+{/usr/share/texlive/texmf-dist/fonts/enc/dvips/base/8r.enc}</usr/share/texlive/
+texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb></usr/share/texlive/texmf-
+dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/share/texlive/texmf-dist/f
+onts/type1/public/amsfonts/cm/cmmi7.pfb></usr/share/texlive/texmf-dist/fonts/ty
+pe1/public/amsfonts/cm/cmr10.pfb></usr/share/texlive/texmf-dist/fonts/type1/pub
+lic/amsfonts/cm/cmsy10.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/times
+/utmb8a.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/times/utmr8a.pfb></u
+sr/share/texlive/texmf-dist/fonts/type1/urw/times/utmri8a.pfb>
+Output written on report_hcs.pdf (7 pages, 130630 bytes).
 PDF statistics:
- 36 PDF objects out of 1000 (max. 8388607)
- 25 compressed objects within 1 object stream
+ 154 PDF objects out of 1000 (max. 8388607)
+ 54 compressed objects within 1 object stream
  0 named destinations out of 1000 (max. 500000)
  13 words of extra memory for PDF output out of 10000 (max. 10000000)
 
