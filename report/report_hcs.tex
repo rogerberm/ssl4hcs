@@ -135,27 +135,32 @@ description of all the possible parameters and a quick user guide.
 \subsubsection{Feature selection}
 The values for all the features from the annotated cells were analyzed with Weka \cite{hall2009weka}. The InfoGain
 attribute evaluator was used to determine the information gain ratio for each feature, and features with a score of
-\todo{run weka again} above $F$ were chosen as the selected dimensions to represent the data for further analysis.
+above \todo{ask: better a top-5 or so than a threshold?} 0.9 were chosen as the selected dimensions to represent
+the data for further analysis.
 
 Due to the heterogeneity on the range of values between the selected features, spanning \todo{how many?}
-several orders of magnitude, normalization of the data was required. The relative InfoGain score among the group of
+several orders of magnitude, normalization of the data was required. The relative
+\todo{find out what this score means (0<=info gain <=1)} InfoGain score among the group of
 selected features was used as a weight for feature normalization, so that when pairwise distance calculations were 
-performed over the reduced \todo{how many features selected?}$g$-dimensional space, each feature would reflect its
-relative importance.
+performed over the reduced 7-dimensional space, each feature would reflect its relative importance.
 
-The selected features were: \todo{make table} feature1, feature2, feature3, feature4. 
+The selected features were: 
 
 \begin{figure}[here]
 \centering
-\begin{tabular}{cr}
-	Feature & Relative score\\
+\begin{tabular}{rlrr}
+	ID & Description & Score & Weight\\
 	\hline
-	feature1 & 0.32\\
-	feature2 & 0.33\\
-	feature3 & 0.11
+	4 & Standard deviation of green intensities (whole cell) & 1.3275 & 1\\
+	3 & Mean of green intensities (whole cell) & 1.1739 & 0.8843\\
+	2 & Standard deviation of green intensities (nuclei) & 1.0605 & 0.7989\\
+	1 & Mean of green intensities (nuclei) & 0.9868 & 0.7434\\
+	92 & Information measure of correlation (scale 5, whole cell)? & 0.9288 & 0.6997\\
+    53 & Correlation (scale 3, whole cell)? & 0.9241 & 0.6961\\
+	93 & Maximal correlation coefficient (scale 5, whole cell) & 0.9081 & 0.6841
 \end{tabular}
 \end{figure}
-\todo{fill this table with actual values}
+
 \subsubsection{Data pre-processing}
 Text files in both \texttt{arff} and \texttt{txt} formats containing feature information for labeled, soft-labeled,
 and unlabeled data were read into a feature matrix $M$ ($n$ data points $\times m$ features).
