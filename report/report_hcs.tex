@@ -8,6 +8,7 @@
 \usepackage{amsmath}
 \usepackage{microtype}
 \usepackage{listings}
+\usepackage{blkarray}
 \usepackage[comma, square, super]{natbib}
 \DisableLigatures{encoding = *, family = *}
 \newcommand{\TODO}[1]{\todo[size=\tiny]{#1}}
@@ -193,13 +194,29 @@ As an outcome of this pre-processing step, the feature matrix containing the val
 for the labeled, soft-labeled, and unlabeled cells (after sampling, when specified) was returned, along with
 the \todo{explain how to construct this}initial label matrix.
 
+%\begin{blockarray}{c}
+%\begin{block}{[cccc][cccc]c\}}
+%	a & b & ... & n & a & b & ... & n &\\
+%	a & b & ... & n & a & b & ... & n & \\
+%	\end{block}
+%\begin{block}{[cccc][cccc]c\}}
+%	a & b & ... & n & a & b & ... & n &\\
+%	a & b & ... & n & a & b & ... & n & \\
+%	\end{block}
+%%\begin{block}{[cccc][cccc]c\}}
+%	a & b & ... & n & a & b & ... & n &\\
+%	a & b & ... & n & a & b & ... & n & \\
+%	\end{block}
+%\end{blockarray}
+%\[
+
 \subsubsection{Data normalization}
 \lipsum[75]
 
 \subsubsection{Graph construction}
 The graph was internally represented by its weight matrix $\mathbf{W}$ ($\mathbf{W}_{ij}>0$ if there exists
-an edge between the vertices $x_i$ and $x_j$, zero otherwise), plus a $n \times m$
-($n$ cells, $m$ possible labels or classes) label matrix $Y$ , with valid values ranging from $0$ to $1$. A value
+an edge between the vertices $x_i$ and $x_j$, zero otherwise), plus a $n \times m$ label matrix $Y$ 
+($n$ cells, $m$ possible labels or classes), with valid values ranging from $0$ to $1$. A value
 of $Y_{i,j}=1$ represents complete confidence that the $i$-th cell in the data set, belongs to the $j$-th
 phenotypic class of cells. Likewise, a value of $0$ indicates absolute disbelief that a cell corresponds to a
 class, and values of $0.5$ indicate complete uncertainty about class membership.

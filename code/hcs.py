@@ -10,16 +10,17 @@ ETH Zurich, 2013.
 '''
 import sys
 from math import exp
-from random import seed
+#from random import seed
 import numpy as np
 from numpy import set_printoptions
-from numpy.random import RandomState
+#from numpy.random import RandomState
 import argparse
 from scipy.spatial.distance import pdist, squareform, euclidean
 from utils import parentdir, get_sample, generate_test_data, get_files, \
-    hcs_labels, hcs_soft_labels, hcs_soft_label_alphas, dummy_soft_labels, dummy_soft_label_alphas
+    hcs_labels, hcs_soft_labels, hcs_soft_label_alphas, dummy_labels, dummy_labels2, dummy_soft_labels, dummy_soft_label_alphas
 import matplotlib.pyplot as plt
 from matplotlib import animation, cm
+from matplotlib import widgets
 
 quiet = False
 
@@ -161,15 +162,52 @@ def process_cmdline(argv):
 
 
 def generate_color_map(label_array, num_labeled, num_soft_labeled, unlabeled_initial_color=None):
+    #color_map = np.concatenate([
+    #    np.where(label_array[0, 0:num_labeled] > 0, 1.0,  0.0),
+    #    np.where(label_array[0, num_labeled:num_labeled + num_soft_labeled] > 0, 0.9,  0.1),
+    #    np.where(label_array[0, num_labeled + num_soft_labeled:] > 0, unlabeled_initial_color or 0.75,  unlabeled_initial_color or 0.25)])
+    color_specification = np.array([[0.1, 0.11, 0.12], [0.4, 0.41, 0.42]])  # for binary case ([[l, s, u], ...])
+    color_specification = np.array([[0.2, 0.17, 0.14], [0.4, 0.37, 0.34], [0.6, 0.57, 0.54], [0.9, 0.87, 0.84]])  # for binary case ([[l, s, u], ...])
+    print color_specification
+    colors = np.linspace(0.5, 0.9, label_array.shape[0] + 1, endpoint=False)[1:]
+    color_specification = np.vstack([colors, colors - 0.01, colors - 0.02]).T
+    print color_specification
+    print label_array
+    ordering = np.argmax(label_array, axis=0)
+    print "ordering = %s" % ordering
     color_map = np.concatenate([
-        np.where(label_array[0, 0:num_labeled] > 0, 1.0,  0.0),
-        np.where(label_array[0, num_labeled:num_labeled + num_soft_labeled] > 0, 0.9,  0.1),
-        np.where(label_array[0, num_labeled + num_soft_labeled:] > 0, unlabeled_initial_color or 0.75,  unlabeled_initial_color or 0.25)])
+        color_specification[ordering[:num_labeled]][:, 0],
+        color_specification[ordering[num_labeled:num_labeled + num_soft_labeled]][:, 1],
+        [unlabeled_initial_color] * (label_array.shape[1] - num_labeled - num_soft_labeled) if unlabeled_initial_color else color_specification[ordering[num_labeled + num_soft_labeled:]][:, 2]
+    ])
     return color_map
+
+class AnimationHandler:
+    frame = 0
+    animate = False
+    animation_reference = None
+
+    def __init__(self, animation_reference):
+        self.animation_reference = animation_reference
+
+    def start(self):
+        self.animate = True
+        self.animation_reference._start()
+
+    def stop(self):
+        self.animate = False
+        self.animation_reference._stop()
+
+    def toggle(self, ignore):
+        self.animate = not self.animate
 
 
 def propagate_labels_SSL(feature_matrix, initial_labels, distance_metric, neighborhood_fn, alpha_vector,
                          max_iterations, num_labeled_points, num_soft_labeled_points, labels=hcs_labels):
+    assert type(initial_labels) is np.ndarray
+    assert len(initial_labels.shape) == 2
+    ___("labels: %s" % labels)
+    assert initial_labels.shape[1] == len(labels)
     '''
     Implementation of the label spreading algorithm (Zhou et al., 2004) on a graph, represented by
     its similarity matrix.
@@ -177,12 +215,12 @@ def propagate_labels_SSL(feature_matrix, initial_labels, distance_metric, neighb
     [TODO: add parameter information]
     '''
     ___("calculating pairwise distances for %i datapoints, %i dimensions each..." %
-        (len(feature_matrix), len(feature_matrix[0])))
+        (feature_matrix.shape[0], feature_matrix.shape[1]))
     pairwise = pdist(feature_matrix)
     ___("  pairwise distances: %s... (%i distances)" % (str(pairwise[1:5]).replace(']', ''), len(pairwise)))
     ___("getting the square form...",)
     pairwise_matrix = squareform(pairwise)
-    ___("%ix%i pairwise distances matrix created" % (len(pairwise_matrix), len(pairwise_matrix)))
+    ___("%ix%i pairwise distances matrix created" % (pairwise_matrix.shape[0], pairwise_matrix.shape[1]))
 
     # Create weight matrix W:
     if neighborhood_fn == 'exp':
@@ -198,26 +236,32 @@ def propagate_labels_SSL(feature_matrix, initial_labels, distance_metric, neighb
     D_sqrt_inv = np.matrix(np.diag(1.0 / np.sqrt(np.sum(W, axis=1))))  # D^{-1/2}
     Alpha = np.matrix(np.diag(alpha_vector))
     OneMinusAlpha = np.matrix(np.diag(1 - np.array(alpha_vector)))
-    Y_0 = np.matrix(initial_labels).T
-    Y_t = np.matrix(initial_labels).T
+    Y_0 = initial_labels.T
+    Y_t = initial_labels.T
     ___("Calculating Laplacian..."),
     Laplacian = D_sqrt_inv * W * D_sqrt_inv
     ___("Iterating up to %i times..." % max_iterations)
 
     # setup plot
+    labeled_array = generate_color_map(Y_t, num_labeled_points, num_soft_labeled_points, 1)
     fig = plt.figure()
     splot_orig = fig.add_subplot(121)
     splot = fig.add_subplot(122)
-    labeled_array = generate_color_map(np.array(Y_t.T), num_labeled_points, num_soft_labeled_points, 0.5)
-    scat_orig = splot_orig.scatter(feature_matrix[:, 0], feature_matrix[:, 1], s=70, c=labeled_array, cmap=cm.RdBu)
+    scat_orig = splot_orig.scatter(feature_matrix[:, 0], feature_matrix[:, 1], s=70, c=labeled_array, cmap=cm.gist_ncar, vmin=0, vmax=1)
     splot_orig.set_xlabel("feature 1")
     splot_orig.set_ylabel("feature 2")
     splot_orig.set_title("Original label assignment")
     splot.set_xlabel("feature 1")
     splot.set_ylabel("feature 2")
     splot.set_title("Current label assignment")
-    scat = splot.scatter(feature_matrix[:, 0], feature_matrix[:, 1], s=70, c=labeled_array, cmap=cm.RdBu)
+    scat = splot.scatter(feature_matrix[:, 0], feature_matrix[:, 1], s=70, c=labeled_array, cmap=cm.gist_ncar, vmin=0, vmax=1)
     header = plt.figtext(0.5, 0.96, "Label propagation", weight="bold", size="large", ha="center")
+
+    axStartAnimation = plt.axes([0.7, 0.005, 0.1, 0.075])
+    bStartPauseAnimation = widgets.Button(axStartAnimation, 'Start')
+    print Laplacian.shape[1], Alpha.shape[0]
+    assert Laplacian.shape[1] == Alpha.shape[0]
+
     ani = None
 
     def init_scatter():
@@ -225,22 +269,34 @@ def propagate_labels_SSL(feature_matrix, initial_labels, distance_metric, neighb
 
     # Animation frame
     def get_propagated_labels(t):
-        if t == 0:
-            raw_input()
-        try:
-            Y_new = Laplacian * Alpha * Y_t + OneMinusAlpha * Y_0
-            if (euclidean(Y_t, Y_new) < 1e-6 or t >= max_iterations) and ani:
-                ani._stop()
-            np.copyto(Y_t, Y_new)
-            color_map = generate_color_map(np.array(Y_t.T), num_labeled_points, num_soft_labeled_points)
-            if t == 0:  # display first label assignment
-                scat_orig.set_array(color_map)
-            scat.set_array(color_map)
-            header.set_text("Label propagation. Iteration %i" % t)
-        except KeyboardInterrupt:
-            return
+        if aHandler.animate:
+            aHandler.frame = aHandler.frame + 1
+            try:
+                for i in range(initial_labels.shape[1]):
+                    Y_new = (Laplacian * Alpha).dot(Y_t[i]) + OneMinusAlpha.dot(Y_0[i])
+                    np.copyto(Y_t[i], Y_new)
+                    #if (euclidean(Y_t, Y_new) < 1e-6 or t >= max_iterations) and ani:
+                    #    ani._stop()
+                color_map = generate_color_map(np.array(Y_t), num_labeled_points, num_soft_labeled_points)
+                if t == 0:  # display first label assignment
+                    scat_orig.set_array(color_map)
+                scat.set_array(color_map)
+                header.set_text("Label propagation. Iteration %i" % aHandler.frame)
+            except KeyboardInterrupt:
+                return
 
-    ani = animation.FuncAnimation(fig, get_propagated_labels, init_func=init_scatter, interval=600)
+    ani = animation.FuncAnimation(fig, get_propagated_labels, init_func=init_scatter)
+    aHandler = AnimationHandler(ani)
+
+    def start_stop(button):
+        aHandler.animate = not aHandler.animate
+        #if aHandler.animate:
+        #    ani._start()
+        #else:
+        #    ani._stop()
+        bStartPauseAnimation.label.set_text("Pause" if aHandler.animate else "Start")
+
+    bStartPauseAnimation.on_clicked(aHandler.toggle)
     plt.show()
     return None
 
@@ -251,7 +307,7 @@ def normalize(M):
 
 def setup_feature_matrix(unlabeled_file_references, soft_labeled_path, labeled_file_references, feature_list,
                          soft_labeled_sample_size, unlabeled_sample_size, labeled_sample_size, class_sampling,
-                         alpha_labeled=0.95, alpha_unlabeled=0.95, alpha_soft_labeled=hcs_soft_label_alphas,
+                         num_labels, alpha_labeled=0.95, alpha_unlabeled=0.95, alpha_soft_labeled=hcs_soft_label_alphas,
                          class_labels=hcs_soft_labels, ignore_labels=[6], normalize_data=True):
     '''
     Reads files with unlabeled and labeled information, and creates the feature matrix with the features
@@ -354,28 +410,74 @@ def get_uniform_sample(center, width, num_points):
     return points
 
 
-def create_dummy_data(labeled_points, soft_labeled_points, unlabeled_points, normalize_data=True):
-    center_labeled_inf, width_labeled_inf = [1.5, 1.2], 0.75
+def create_dummy_data(labeled_points=100, soft_labeled_points=100, unlabeled_points=100, normalize_data=True, num_labels=2):
+    center_labeled_inf, width_labeled_inf = [1.5, 1.5], 0.75
     #center_labeled_inf, width_labeled_inf = [2.5, 2], 0.15
-    center_labeled_noninf, width_labeled_noninf = 4.5, 0.9
-    center_soft_inf, width_soft_inf = [1.4, 1.6], 1.4
-    center_soft_noninf, width_soft_noninf = 4.6, 1.2
+    center_labeled_noninf, width_labeled_noninf = [4.5, 4.5], 0.75
+    center_soft_inf, width_soft_inf = [1.5, 1.5], 1.4
+    center_soft_noninf, width_soft_noninf = 4.5, 1.4
     #center_unlabeled1, width_unlabeled1 = 3.0, 1.0
     #center_unlabeled2, width_unlabeled2 = 2.9, 0.1
     center_unlabeled1, width_unlabeled1 = 3.0, 3.0  # 75%
     center_unlabeled2, width_unlabeled2 = 3.0, 3.0  # 25%
 
-    M = np.column_stack((get_uniform_sample(center_labeled_inf, width_labeled_inf, labeled_points / 2), [1.0] * (labeled_points / 2)))
-    M = np.concatenate((M, np.column_stack((get_uniform_sample(center_labeled_noninf, width_labeled_noninf, labeled_points / 2), [-1.0] * (labeled_points / 2)))))
-    M = np.concatenate((M, np.column_stack((get_uniform_sample(center_soft_inf, width_soft_inf, soft_labeled_points / 2), [1.0] * (soft_labeled_points / 2)))))
-    M = np.concatenate((M, np.column_stack((get_uniform_sample(center_soft_noninf, width_soft_inf, 3), [1.0] * 3))))
-    M = np.concatenate((M, np.column_stack((get_uniform_sample(center_soft_noninf, width_soft_noninf, soft_labeled_points / 2 - 3), [-1.0] * (soft_labeled_points / 2 - 3)))))
-    M = np.concatenate((M, np.column_stack((get_uniform_sample(center_unlabeled1, width_unlabeled1, int(0.75 * unlabeled_points)), [0.0] * int(0.75 * unlabeled_points)))))
-    M = np.concatenate((M, np.column_stack((get_uniform_sample(center_unlabeled2, width_unlabeled2, unlabeled_points - int(0.75 * unlabeled_points)), [0.0] * (unlabeled_points - int(0.75 * unlabeled_points))))))
+    M = np.column_stack((get_uniform_sample(center_labeled_inf, width_labeled_inf, labeled_points / 2), [[0.0, 1.0]] * (labeled_points / 2)))
+    M = np.concatenate((M, np.column_stack((get_uniform_sample(center_labeled_noninf, width_labeled_noninf, labeled_points / 2), [[1.0, 0.0]] * (labeled_points / 2)))))
 
-    alpha_vector = np.array([0.5] * labeled_points + [0.85] * soft_labeled_points + [0.95] * unlabeled_points)
+    M = np.concatenate((M, np.column_stack((get_uniform_sample(center_soft_inf, width_soft_inf, soft_labeled_points / 2), [[0.0, 1.0]] * (soft_labeled_points / 2)))))
+    #M = np.concatenate((M, np.column_stack((get_uniform_sample(center_soft_noninf, width_soft_inf, 3), [[0.0, 1.0]] * 3))))
+    #M = np.concatenate((M, np.column_stack((get_uniform_sample(center_soft_noninf, width_soft_noninf, soft_labeled_points / 2 - 3), [[1.0, 0.0]] * (soft_labeled_points / 2 - 3)))))
+    M = np.concatenate((M, np.column_stack((get_uniform_sample(center_soft_noninf, width_soft_noninf, soft_labeled_points / 2), [[1.0, 0.0]] * (soft_labeled_points / 2)))))
+
+    M = np.concatenate((M, np.column_stack((get_uniform_sample(center_unlabeled1, width_unlabeled1, int(0.75 * unlabeled_points)), [[0.5, 0.5]] * int(0.75 * unlabeled_points)))))
+    M = np.concatenate((M, np.column_stack((get_uniform_sample(center_unlabeled2, width_unlabeled2, unlabeled_points - int(0.75 * unlabeled_points)), [[0.5, 0.5]] * (unlabeled_points - int(0.75 * unlabeled_points))))))
+
+    alpha_vector = np.array([0.1] * labeled_points + [0.25] * soft_labeled_points + [0.75] * unlabeled_points)
     if normalize_data:
-        M = np.column_stack([normalize(M[:, :-1]), M[:, -1]])
+        M = np.column_stack([normalize(M[:, :-num_labels]), M[:, -num_labels:]])
+    return M, alpha_vector, labeled_points, soft_labeled_points
+
+
+def create_dummy_data2(labeled_points=100, soft_labeled_points=100, unlabeled_points=100, normalize_data=True, num_labels=2):
+    center_labeled_1, width_labeled_1 = [1, 1], 2.5
+    center_labeled_2, width_labeled_2 = [5, 5], 2.5
+    center_labeled_3, width_labeled_3 = [1, 5], 2.5
+    center_labeled_4, width_labeled_4 = [4, 1], 2.5
+    center_soft1, width_soft1 = [1, 1], 2.8
+    center_soft2, width_soft2 = [5, 5], 2.8
+    center_soft3, width_soft3 = [1, 5], 2.8
+    center_soft4, width_soft4 = [5, 1], 2.8
+    num_mislabeled_points = 4
+
+    center_unlabeled, width_unlabeled = 3.0, 5.0  # 25%
+
+    M = np.column_stack((get_uniform_sample(center_labeled_1, width_labeled_1, labeled_points / 4),
+                         [[1.0, 0.0, 0.0, 0.0]] * (labeled_points / 4)))
+    M = np.concatenate((M, np.column_stack((get_uniform_sample(center_labeled_2, width_labeled_2, labeled_points / 4),
+                                            [[0.0, 1.0, 0.0, 0.0]] * (labeled_points / 4)))))
+    M = np.concatenate((M, np.column_stack((get_uniform_sample(center_labeled_3, width_labeled_3, labeled_points / 4),
+                                            [[0.0, 0.0, 1.0, 0.0]] * (labeled_points / 4)))))
+    M = np.concatenate((M, np.column_stack((get_uniform_sample(center_labeled_4, width_labeled_4, labeled_points / 4),
+                                            [[0.0, 0.0, 0.0, 1.0]] * (labeled_points / 4)))))
+
+    M = np.concatenate((M, np.column_stack((get_uniform_sample(center_soft1, width_soft1, soft_labeled_points / 4),
+                                            [[1.0, 0.0, 0.0, 0.0]] * (soft_labeled_points / 4)))))
+    M = np.concatenate((M, np.column_stack((get_uniform_sample(center_soft2, width_soft2, soft_labeled_points / 4),
+                                            [[0.0, 1.0, 0.0, 0.0]] * (soft_labeled_points / 4)))))
+    M = np.concatenate((M, np.column_stack((get_uniform_sample(center_soft3, width_soft3, soft_labeled_points / 4),
+                                            [[0.0, 0.0, 1.0, 0.0]] * (soft_labeled_points / 4)))))
+    M = np.concatenate((M, np.column_stack((get_uniform_sample(center_soft4, width_soft4, num_mislabeled_points),
+                                            [[0.0, 1.0, 0.0, 0.0]] * num_mislabeled_points))))
+    remaining_points = soft_labeled_points - 3 * (soft_labeled_points / 4) - num_mislabeled_points
+    M = np.concatenate((M, np.column_stack((get_uniform_sample(center_soft4, width_soft4, remaining_points),
+                                            [[0.0, 0.0, 0.0, 1.0]] * remaining_points))))
+
+    M = np.concatenate((M, np.column_stack((get_uniform_sample(center_unlabeled, width_unlabeled, unlabeled_points),
+                                            [[0.5, 0.5, 0.5, 0.5]] * (unlabeled_points)))))
+
+    alpha_vector = np.array([0.05] * labeled_points + [0.2] * soft_labeled_points + [0.75] * unlabeled_points)
+    if normalize_data:
+        M = np.column_stack([normalize(M[:, :-num_labels]), M[:, -num_labels:]])
     return M, alpha_vector, labeled_points, soft_labeled_points
 
 
@@ -388,18 +490,24 @@ def main(argv):
         unlabeled_sample_size, labeled_sample_size, class_sampling, distance_metric, neighborhood_fn, alpha, \
         max_iterations, test = process_cmdline(argv)
 
-    RandomState(7283)
-    seed(7283)
+    # RandomState(7283)
+    # seed(7283)
+    labels = hcs_labels
+
     if test:
-        M, alpha_vector, labeled_points, soft_labeled_points = create_dummy_data(40, 180, 180, normalize_data=True)
+        labels = dummy_labels2
+        M, alpha_vector, labeled_points, soft_labeled_points = \
+            create_dummy_data2(labeled_sample_size if labeled_sample_size > 0 else 200,
+                               unlabeled_sample_size / 2, unlabeled_sample_size / 2, num_labels=len(labels), normalize_data=True)
     else:
         M, alpha_vector, labeled_points, soft_labeled_points = \
             setup_feature_matrix(unlabeled_file_references, soft_labeled_path, labeled_file_references,
                                  feature_list, soft_labeled_sample_size, unlabeled_sample_size, 200,
                                  # labeled_sample_size,
-                                 class_sampling, ignore_labels=['6'])
+                                 class_sampling, ignore_labels=['6'], num_labels=len(labels))
 
-    Y = propagate_labels_SSL(M[:, :-1], M[:, -1], distance_metric, neighborhood_fn, alpha_vector, max_iterations, labeled_points, soft_labeled_points)
+    Y = propagate_labels_SSL(M[:, :-len(labels)], M[:, -len(labels):], distance_metric, neighborhood_fn, alpha_vector, max_iterations,
+                             labeled_points, soft_labeled_points, labels=labels)
     return Y
 
 
@@ -428,4 +536,5 @@ def load_test():
 if __name__ == "__main__":
     main(sys.argv[1:])
 else:
-    load_test()
+    pass
+    #load_test()

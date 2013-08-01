@@ -26,6 +26,11 @@ hcs_soft_labels = {'bPEGI-29': 1,  # non-infected = 1
 dummy_labels = {1: 'non-infected',
                 2: 'infected'}
 
+dummy_labels2 = {1: 'class 1',
+                 2: 'class 2',
+                 3: 'class 3',
+                 4: 'class 4'}
+
 hcs_soft_label_alphas = {1: 0.5, 2: 0.95, 3: 0.95, 4: 0.95, 5: 0.95}
 
 
