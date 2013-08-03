@@ -31,7 +31,8 @@ dummy_labels2 = {1: 'class 1',
                  3: 'class 3',
                  4: 'class 4'}
 
-hcs_soft_label_alphas = {1: 0.5, 2: 0.95, 3: 0.95, 4: 0.95, 5: 0.95}
+#hcs_soft_label_alphas = {1: 0.5, 2: 0.95, 3: 0.95, 4: 0.95, 5: 0.95}
+hcs_soft_label_alphas = {1: 0.1, 2: 0.2, 3: 0.25, 4: 0.3, 5: 0.3}
 
 
 dummy_soft_labels = {'non-infected': 1,
