@@ -698,7 +698,13 @@ def main(argv):
                              labeled_points, soft_labeled_points, labels=labels, use_gui=use_gui)
     if validation and type(expected_labels) is np.ndarray:
         Y_unlabeled = Y[-len(expected_labels):]
-        print "recall=%f" % (np.sum(Y_unlabeled == expected_labels) / float(len(expected_labels)),)
+        classwise_precision = {label: np.sum(np.all([expected_labels == label, expected_labels == Y_unlabeled], axis=0)) /
+                               (1. * np.sum(Y_unlabeled == label)) for label in labels}
+        classwise_recall = {label: np.sum(np.all([expected_labels == label, expected_labels == Y_unlabeled], axis=0)) /
+                            (1. * np.sum(expected_labels == label)) for label in labels}
+        print "a-labeled, %f, a-unlabeled, %f, a-soft-uninf, %f, a-soft-inf, %f, nf, %s, precision, %s, recall, %s" % \
+            (alpha_labeled, alpha_unlabeled, alpha_soft_uninfected, alpha_soft_infected, neighborhood_fn,
+             classwise_precision, classwise_recall)
     return Y
 
 
