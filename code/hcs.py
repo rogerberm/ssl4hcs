@@ -106,6 +106,7 @@ def process_cmdline(argv):
     # TODO: move this to utils
     parser = argparse.ArgumentParser(description="Label propagation")
     parser.add_argument("-t", "--test", help="Performs a test run.", action='store_true')
+    parser.add_argument("-v", "--validation", help="Performs a validation run.", action='store_true')
     parser.add_argument("-l", "--labeled", help="Labeled files.", dest="labeled_file_references", nargs='+',
                         metavar='LABELED_FILE')
     parser.add_argument("-u", "--unlabeled", help="Unlabeled files.", dest='unlabeled_file_references', nargs='+',
@@ -130,6 +131,15 @@ def process_cmdline(argv):
     parser.add_argument("-f", "--features", help='Selected feature indices (as given by the labeled data)', nargs='+',
                         dest='feature_list', type=int, default=[1, 2], metavar='FEATURE_INDEX')
     parser.add_argument("-q", "--quiet", help="Displays progress and messages.", action='store_true')
+    parser.add_argument("-g", "--use-gui", help="Displays the graphical user interface.", action='store_true')
+    parser.add_argument("-al", "--alpha-labeled", help="Learning rate for labeled data",
+                        type=float, dest='alpha_labeled', default=0.1, metavar='ALPHA')
+    parser.add_argument("-au", "--alpha-unlabeled", help="Learning rate for unlabeled data",
+                        type=float, dest='alpha_unlabeled', default=0.8, metavar='ALPHA')
+    parser.add_argument("-asu", "--alpha-soft-uninfected", help="Learning rate for soft data (uninfected)",
+                        type=float, dest='alpha_soft_uninfected', default=0.3, metavar='ALPHA')
+    parser.add_argument("-asi", "--alpha-soft-infected", help="Learning rate for soft data (infected)",
+                        type=float, dest='alpha_soft_infected', default=0.5, metavar='ALPHA')
     args = vars(parser.parse_args())
     args['soft_labeled_sample_size'] = args['sample_size'] / 2
     args['unlabeled_sample_size'] = args['sample_size'] / 2
@@ -152,14 +162,20 @@ def process_cmdline(argv):
     distance_metric = args['distance_metric']
     neighborhood_fn = args['neighborhood_fn']
     quiet = args['quiet']
-    alpha = 0.94
+    use_gui = args['use_gui']
+    alpha_labeled = args['alpha_labeled']
+    alpha_unlabeled = args['alpha_unlabeled']
+    alpha_soft_uninfected = args['alpha_soft_uninfected']
+    alpha_soft_infected = args['alpha_soft_infected']
     max_iterations = args['max_iterations']
     set_printoptions(linewidth=args['width'] - 1, nanstr='0', precision=3)
 
     test = args['test']
+    validation = args['validation']
     return (unlabeled_file_references, soft_labeled_path, labeled_file_references, feature_list,
             soft_labeled_sample_size, unlabeled_sample_size, labeled_sample_size, class_sampling, distance_metric,
-            neighborhood_fn, alpha, max_iterations, test)
+            neighborhood_fn, alpha_labeled, alpha_unlabeled, alpha_soft_uninfected, alpha_soft_infected,
+            max_iterations, test, validation, use_gui)
 
 
 def get_labels(label_array, labels):
@@ -185,8 +201,10 @@ class AnimationHandler:
     frame = 0
     animate = False
     animation_handler = None
+    end = False
 
     def __init__(self, animation_handler):
+        self.end = False
         self.animation_handler = animation_handler
 
     def toggle(self):
@@ -194,11 +212,13 @@ class AnimationHandler:
 
     def stop(self):
         self.animate = False
-        self.animation_handler._stop()
+        self.end = True
+        if self.animation_handler:
+            self.animation_handler._stop()
 
 
 def propagate_labels_SSL(feature_matrix, initial_labels, distance_metric, neighborhood_fn, alpha_vector,
-                         max_iterations, num_labeled_points, num_soft_labeled_points, labels=hcs_labels):
+                         max_iterations, num_labeled_points, num_soft_labeled_points, labels=hcs_labels, use_gui=True):
     assert type(initial_labels) is np.ndarray
     assert len(initial_labels.shape) == 2
     ___("labels: %s" % labels)
@@ -245,72 +265,72 @@ def propagate_labels_SSL(feature_matrix, initial_labels, distance_metric, neighb
     ___("Iterating up to %i times..." % max_iterations)
 
     # setup plot
-    labeled_array = generate_color_map(Y_t, num_labeled_points, num_soft_labeled_points, 1)
-    fig = plt.figure()
-    splot_orig = fig.add_subplot(121)
-    splot = fig.add_subplot(122)
-    scat_orig_labeled = splot_orig.scatter(feature_matrix[: num_labeled_points, 0],
-                                           feature_matrix[: num_labeled_points, 1],
-                                           s=80, c=labeled_array[:num_labeled_points],
-                                           cmap=cm.gist_ncar, vmin=0, vmax=1, alpha=0.65, marker='o')
-    scat_orig_soft = splot_orig.scatter(feature_matrix[num_labeled_points:num_labeled_points + num_soft_labeled_points, 0],
-                                        feature_matrix[num_labeled_points:num_labeled_points + num_soft_labeled_points, 1],
-                                        s=35,
-                                        c=labeled_array[num_labeled_points:num_labeled_points + num_soft_labeled_points],
-                                        cmap=cm.gist_ncar, vmin=0, vmax=1, marker='p', alpha=0.6)
-    scat_orig_unlabeled = splot_orig.scatter(feature_matrix[num_labeled_points + num_soft_labeled_points:, 0],
-                                             feature_matrix[num_labeled_points + num_soft_labeled_points:, 1], s=30,
-                                             c=labeled_array[num_labeled_points + num_soft_labeled_points:],
-                                             cmap=cm.gist_ncar, vmin=0, vmax=1, alpha=0.5)
-    splot_orig.set_xlabel("feature 1")
-    splot_orig.set_ylabel("feature 2")
-    splot_orig.set_title("Original label assignment")
-    splot.set_xlabel("feature 1")
-    splot.set_ylabel("feature 2")
-    splot.set_title("Current label assignment")
-    scat_labeled = splot.scatter(feature_matrix[:num_labeled_points, 0], feature_matrix[:num_labeled_points, 1], s=80,
-                                 c=labeled_array[:num_labeled_points], cmap=cm.gist_ncar, vmin=0, vmax=1, marker='o',
-                                 alpha=0.55)
-    scat_soft_labeled = splot.scatter(feature_matrix[num_labeled_points:num_labeled_points + num_soft_labeled_points, 0],
-                                      feature_matrix[num_labeled_points:num_labeled_points + num_soft_labeled_points, 1],
-                                      s=35,
-                                      c=labeled_array[num_labeled_points:num_labeled_points + num_soft_labeled_points],
-                                      cmap=cm.gist_ncar, vmin=0, vmax=1, marker='p', alpha=0.6)
-    scat_unlabeled = splot.scatter(feature_matrix[num_labeled_points + num_soft_labeled_points:, 0],
-                                   feature_matrix[num_labeled_points + num_soft_labeled_points:, 1], s=30,
-                                   c=labeled_array[num_labeled_points + num_soft_labeled_points:], cmap=cm.gist_ncar,
-                                   vmin=0, vmax=1, alpha=0.5)
-    header = plt.figtext(0.5, 0.96, "Label propagation", weight="bold", size="large", ha="center")
+    if use_gui:
+        labeled_array = generate_color_map(Y_t, num_labeled_points, num_soft_labeled_points, 1)
+        fig = plt.figure()
+        splot_orig = fig.add_subplot(121)
+        splot = fig.add_subplot(122)
+        scat_orig_labeled = splot_orig.scatter(feature_matrix[: num_labeled_points, 0],
+                                               feature_matrix[: num_labeled_points, 1],
+                                               s=80, c=labeled_array[:num_labeled_points],
+                                               cmap=cm.gist_ncar, vmin=0, vmax=1, alpha=0.65, marker='o')
+        scat_orig_soft = splot_orig.scatter(feature_matrix[num_labeled_points:num_labeled_points + num_soft_labeled_points, 0],
+                                            feature_matrix[num_labeled_points:num_labeled_points + num_soft_labeled_points, 1],
+                                            s=35,
+                                            c=labeled_array[num_labeled_points:num_labeled_points + num_soft_labeled_points],
+                                            cmap=cm.gist_ncar, vmin=0, vmax=1, marker='p', alpha=0.6)
+        scat_orig_unlabeled = splot_orig.scatter(feature_matrix[num_labeled_points + num_soft_labeled_points:, 0],
+                                                 feature_matrix[num_labeled_points + num_soft_labeled_points:, 1], s=30,
+                                                 c=labeled_array[num_labeled_points + num_soft_labeled_points:],
+                                                 cmap=cm.gist_ncar, vmin=0, vmax=1, alpha=0.5)
+        splot_orig.set_xlabel("feature 1")
+        splot_orig.set_ylabel("feature 2")
+        splot_orig.set_title("Original label assignment")
+        splot.set_xlabel("feature 1")
+        splot.set_ylabel("feature 2")
+        splot.set_title("Current label assignment")
+        scat_labeled = splot.scatter(feature_matrix[:num_labeled_points, 0], feature_matrix[:num_labeled_points, 1], s=80,
+                                     c=labeled_array[:num_labeled_points], cmap=cm.gist_ncar, vmin=0, vmax=1, marker='o',
+                                     alpha=0.55)
+        scat_soft_labeled = splot.scatter(feature_matrix[num_labeled_points:num_labeled_points + num_soft_labeled_points, 0],
+                                          feature_matrix[num_labeled_points:num_labeled_points + num_soft_labeled_points, 1],
+                                          s=35,
+                                          c=labeled_array[num_labeled_points:num_labeled_points + num_soft_labeled_points],
+                                          cmap=cm.gist_ncar, vmin=0, vmax=1, marker='p', alpha=0.6)
+        scat_unlabeled = splot.scatter(feature_matrix[num_labeled_points + num_soft_labeled_points:, 0],
+                                       feature_matrix[num_labeled_points + num_soft_labeled_points:, 1], s=30,
+                                       c=labeled_array[num_labeled_points + num_soft_labeled_points:], cmap=cm.gist_ncar,
+                                       vmin=0, vmax=1, alpha=0.5)
+        header = plt.figtext(0.5, 0.96, "Label propagation", weight="bold", size="large", ha="center")
 
-    axStartAnimation = plt.axes([0.89, 0.005, 0.1, 0.055])
-    bStartPauseAnimation = widgets.Button(axStartAnimation, 'Start')
+        axStartAnimation = plt.axes([0.89, 0.005, 0.1, 0.055])
+        bStartPauseAnimation = widgets.Button(axStartAnimation, 'Start')
 
-    plt.subplots_adjust(bottom=0.17)
-    rax_orig = plt.axes([0.225, 0.005, 0.155, 0.12])
-    label_scatter_orig = {'Labeled': scat_orig_labeled,
-                          'Soft-labeled': scat_orig_soft,
-                          'Unlabeled': scat_orig_unlabeled}
-    check_orig = widgets.CheckButtons(rax_orig, label_scatter_orig.keys(), (True, True, True))
+        plt.subplots_adjust(bottom=0.17)
+        rax_orig = plt.axes([0.225, 0.005, 0.155, 0.12])
+        label_scatter_orig = {'Labeled': scat_orig_labeled,
+                              'Soft-labeled': scat_orig_soft,
+                              'Unlabeled': scat_orig_unlabeled}
+        check_orig = widgets.CheckButtons(rax_orig, label_scatter_orig.keys(), (True, True, True))
 
-    rax = plt.axes([0.65, 0.005, 0.155, 0.12])
-    label_scatter = {'Labeled': scat_labeled,
-                     'Soft-labeled': scat_soft_labeled,
-                     'Unlabeled': scat_unlabeled}
-    check = widgets.CheckButtons(rax, label_scatter.keys(), (True, True, True))
+        rax = plt.axes([0.65, 0.005, 0.155, 0.12])
+        label_scatter = {'Labeled': scat_labeled,
+                         'Soft-labeled': scat_soft_labeled,
+                         'Unlabeled': scat_unlabeled}
+        check = widgets.CheckButtons(rax, label_scatter.keys(), (True, True, True))
 
-    def hide_show_orig(label):
-        scatter_plot = label_scatter_orig[label]
-        scatter_plot.set_visible(not scatter_plot.get_visible())
-        plt.draw()
+        def hide_show_orig(label):
+            scatter_plot = label_scatter_orig[label]
+            scatter_plot.set_visible(not scatter_plot.get_visible())
+            plt.draw()
 
-    check_orig.on_clicked(hide_show_orig)
+        def hide_show(label):
+            scatter_plot = label_scatter[label]
+            scatter_plot.set_visible(not scatter_plot.get_visible())
+            plt.draw()
 
-    def hide_show(label):
-        scatter_plot = label_scatter[label]
-        scatter_plot.set_visible(not scatter_plot.get_visible())
-        plt.draw()
-
-    check.on_clicked(hide_show)
+        check.on_clicked(hide_show)
+        check_orig.on_clicked(hide_show_orig)
 
     assert Laplacian.shape[1] == Alpha.shape[0]
 
@@ -337,29 +357,38 @@ def propagate_labels_SSL(feature_matrix, initial_labels, distance_metric, neighb
                 np.copyto(Y_scaled, class_scaling * Y_t.T)
                 color_map = generate_color_map(Y_scaled.T, num_labeled_points, num_soft_labeled_points)
                 #color_map = generate_color_map(np.array(Y_t), num_labeled_points, num_soft_labeled_points)
-                if t == 0:  # display first label assignment
-                    scat_orig_unlabeled.set_array(color_map)
-                scat_labeled.set_array(color_map[:num_labeled_points])
-                scat_soft_labeled.set_array(color_map[num_labeled_points: num_labeled_points + num_soft_labeled_points])
-                scat_unlabeled.set_array(color_map[num_labeled_points + num_soft_labeled_points:])
-                header.set_text("Label propagation. Iteration %i" % aHandler.frame)
+                if use_gui:
+                    if t == 0:  # display first label assignment
+                        scat_orig_unlabeled.set_array(color_map)
+                    scat_labeled.set_array(color_map[:num_labeled_points])
+                    scat_soft_labeled.set_array(color_map[num_labeled_points: num_labeled_points + num_soft_labeled_points])
+                    scat_unlabeled.set_array(color_map[num_labeled_points + num_soft_labeled_points:])
+                    header.set_text("Label propagation. Iteration %i" % aHandler.frame)
                 ___([euclidean(Y_old[i], Y_t[i]) for i in
                      range(Y_old.shape[0])])
                 if all([euclidean(Y_old[i], Y_t[i]) < 1e-2 for i in range(Y_old.shape[0])]) or aHandler.frame >= max_iterations:
-                    header.set_text("%s %s" % (header.get_text(), "[end]"))
+                    if use_gui:
+                        header.set_text("%s %s" % (header.get_text(), "[end]"))
                     aHandler.stop()
             except KeyboardInterrupt:
+                aHandler.stop()
                 return
 
-    aHandler = AnimationHandler(animation.FuncAnimation(fig, get_propagated_labels, init_func=init_scatter))
+    if use_gui:
+        aHandler = AnimationHandler(animation.FuncAnimation(fig, get_propagated_labels, init_func=init_scatter))
 
-    def start_stop(mouse_event):
-        aHandler.toggle()
-        bStartPauseAnimation.label.set_text("Pause" if aHandler.animate else "Start")
-        plt.draw()
+        def start_stop(mouse_event):
+            aHandler.toggle()
+            bStartPauseAnimation.label.set_text("Pause" if aHandler.animate else "Start")
+            plt.draw()
 
-    bStartPauseAnimation.on_clicked(start_stop)
-    plt.show()
+        bStartPauseAnimation.on_clicked(start_stop)
+        plt.show()
+    else:
+        aHandler = AnimationHandler(None)
+        aHandler.animate = True
+        while(not aHandler.end):
+            get_propagated_labels(0)
     return get_labels(Y_scaled.T, labels)
 
 
@@ -379,6 +408,65 @@ def get_label_matrix(label_vector, class_labels):
         else:
             label_matrix[i, label_vector[i] - 1] = 1
     return label_matrix
+
+
+def setup_validation_matrix(labeled_file_references, soft_labeled_path, feature_list,
+                            labeled_sample_size, class_sampling, alpha_labeled,
+                            alpha_unlabeled, alpha_soft_labeled,
+                            class_labels=hcs_soft_labels, ignore_labels=[6],
+                            normalize_data=True):
+    alpha_vector = []
+
+    validation_data = [read_arff_file(input_file, feature_list, ignore_labels=ignore_labels)
+                       for input_file in labeled_file_references]
+    validation_points = np.concatenate(validation_data)
+    np.random.shuffle(validation_points)
+    labeled_points = validation_points[:labeled_sample_size]
+    unlabeled_points = validation_points[labeled_sample_size:]
+    expected_labels = unlabeled_points[:, -1].copy()
+    unlabeled_points[:, -1] = -1
+    soft_labeled_sample_size = len(unlabeled_points)
+
+    alpha_vector += [alpha_labeled] * len(labeled_points)
+
+    soft_labeled_points = None
+    if soft_labeled_path:
+        soft_labeled_data = {label_key: [] for label_key in class_labels.keys()}
+        soft_labeled_file_references = get_files(soft_labeled_path)
+        for input_file in soft_labeled_file_references:
+            label_key = parentdir(input_file)
+            soft_labeled_data[label_key] += [read_hcs_file(input_file, feature_list, soft_label=class_labels[label_key])]
+        # Sample unlabeled data uniformly over classes
+        if class_sampling:
+            class_sample_boundaries = np.rint(np.linspace(0, soft_labeled_sample_size, len(class_labels) + 1))
+            class_sample_sizes = class_sample_boundaries[1:] - class_sample_boundaries[:-1]
+            i = iter(class_sample_sizes)
+            class_sample_size = {class_label: int(i.next()) for class_label in class_labels.keys()}
+            soft_labeled_data = [get_sample(np.concatenate(soft_labeled_set), class_sample_size[soft_labeled_set_name])
+                                 for soft_labeled_set_name, soft_labeled_set in soft_labeled_data.iteritems()]
+        else:
+            soft_labeled_data = np.concatenate(soft_labeled_data.values())
+        soft_labeled_points = np.concatenate(soft_labeled_data)
+        soft_labeled_alphas = [alpha_soft_labeled[label] for label in soft_labeled_points[:, -1]]
+        alpha_vector += soft_labeled_alphas
+    alpha_vector += [alpha_unlabeled] * len(unlabeled_points)
+
+    if soft_labeled_points is None:
+        soft_labeled_points = []
+        M = np.concatenate([labeled_points, unlabeled_points])
+    else:
+        M = np.concatenate([labeled_points, soft_labeled_points, unlabeled_points])
+
+    initial_labels = get_label_matrix(M[:, -1], class_labels)
+    M = M[:, :-1]
+
+    if normalize_data:
+        # M = np.column_stack([normalize(M), initial_labels])
+        scores = np.array([1.3275, 1.1739, 1.0605, 0.9868])
+        weights = np.max(scores) / scores
+        M = normalize(M, weights)
+
+    return (M, initial_labels, alpha_vector, len(labeled_points), len(soft_labeled_points), expected_labels)
 
 
 def setup_feature_matrix(unlabeled_file_references, soft_labeled_path, labeled_file_references, feature_list,
@@ -428,7 +516,7 @@ def setup_feature_matrix(unlabeled_file_references, soft_labeled_path, labeled_f
         if class_sampling:
             class_sample_size = {class_label: soft_labeled_sample_size / len(class_labels) if class_sampling else -1
                                  for class_label in class_labels.keys()}
-            soft_labeled_data = [get_sample(np.concatenate(soft_labeled_set), class_sample_size[label_key])
+            soft_labeled_data = [get_sample(np.concatenate(soft_labeled_set), class_sample_size[soft_labeled_set_name])
                                  for soft_labeled_set_name, soft_labeled_set in soft_labeled_data.iteritems()]
         else:
             soft_labeled_data = np.concatenate(soft_labeled_data.values())
@@ -573,17 +661,29 @@ def main(argv):
     applies the label propagation algorithm iteratively
     '''
     unlabeled_file_references, soft_labeled_path, labeled_file_references, feature_list, soft_labeled_sample_size, \
-        unlabeled_sample_size, labeled_sample_size, class_sampling, distance_metric, neighborhood_fn, alpha, \
-        max_iterations, test = process_cmdline(argv)
+        unlabeled_sample_size, labeled_sample_size, class_sampling, distance_metric, neighborhood_fn, alpha_labeled, \
+        alpha_unlabeled, alpha_soft_uninfected, alpha_soft_infected, max_iterations, test, \
+        validation, use_gui = process_cmdline(argv)
 
     seed(7283)
     labels = hcs_labels
+    expected_labels = None
 
     if test:
         labels = dummy_labels2
         M, initial_labels, alpha_vector, labeled_points, soft_labeled_points = \
             create_dummy_data2(labeled_sample_size if labeled_sample_size > 0 else 200,
                                unlabeled_sample_size / 2, unlabeled_sample_size / 2, num_labels=len(labels), normalize_data=True)
+    elif validation:
+        alpha_soft_labeled = {1: alpha_soft_uninfected,
+                              2: alpha_soft_infected,
+                              3: alpha_soft_infected,
+                              4: alpha_soft_infected,
+                              5: alpha_soft_infected}
+        M, initial_labels, alpha_vector, labeled_points, soft_labeled_points, expected_labels = \
+            setup_validation_matrix(labeled_file_references, soft_labeled_path, feature_list, labeled_sample_size,
+                                    class_sampling, alpha_labeled, alpha_unlabeled, alpha_soft_labeled,
+                                    ignore_labels=['6'], normalize_data=True)
     else:
         M, initial_labels, alpha_vector, labeled_points, soft_labeled_points = \
             setup_feature_matrix(unlabeled_file_references, soft_labeled_path, labeled_file_references,
@@ -593,8 +693,10 @@ def main(argv):
                                  num_labels=len(labels), normalize_data=True)
 
     Y = propagate_labels_SSL(M, initial_labels, distance_metric, neighborhood_fn, alpha_vector, max_iterations,
-                             labeled_points, soft_labeled_points, labels=labels)
-    print Y
+                             labeled_points, soft_labeled_points, labels=labels, use_gui=use_gui)
+    if validation and type(expected_labels) is np.ndarray:
+        Y_unlabeled = Y[-len(expected_labels):]
+        print "recall=%f" % (np.sum(Y_unlabeled == expected_labels) / float(len(expected_labels)),)
     return Y
 
 
