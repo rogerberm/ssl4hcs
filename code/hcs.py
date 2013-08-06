@@ -354,7 +354,8 @@ def propagate_labels_SSL(feature_matrix, initial_labels, distance_metric, neighb
                 class_prior = np.sum(initial_labels[:num_labeled_points], axis=0) / float(num_labeled_points)
                 class_mass = np.sum(initial_labels[num_labeled_points:], axis=0) / float(initial_labels.shape[0] - num_labeled_points)
                 class_scaling = class_prior / class_mass
-                np.copyto(Y_scaled, class_scaling * Y_t.T)
+                #np.copyto(Y_scaled, class_scaling * Y_t.T)
+                Y_scaled[:] = class_scaling * Y_t.T
                 color_map = generate_color_map(Y_scaled.T, num_labeled_points, num_soft_labeled_points)
                 #color_map = generate_color_map(np.array(Y_t), num_labeled_points, num_soft_labeled_points)
                 if use_gui:
