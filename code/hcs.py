@@ -348,7 +348,8 @@ def propagate_labels_SSL(feature_matrix, initial_labels, distance_metric, neighb
                 Y_old = Y_t.copy()
                 for i in range(initial_labels.shape[1]):
                     Y_new = (Laplacian * Alpha).dot(Y_t[i]) + OneMinusAlpha.dot(Y_0[i])
-                    np.copyto(Y_t[i], Y_new)
+                    #np.copyto(Y_t[i], Y_new)
+                    Y_t[i] = Y_new
 
                 # class mass normalization
                 class_prior = np.sum(initial_labels[:num_labeled_points], axis=0) / float(num_labeled_points)
