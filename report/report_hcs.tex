@@ -9,6 +9,7 @@
 \usepackage{microtype}
 \usepackage{listings}
 \usepackage{blkarray}
+\usepackage{mathpple}
 \usepackage[comma, square, super]{natbib}
 \DisableLigatures{encoding = *, family = *}
 \newcommand{\TODO}[1]{\todo[size=\tiny]{#1}}
@@ -128,7 +129,7 @@ specific phenotypes (labels) are more likely to occur.
 \subsubsection{Development and runtime environment}
 To read and analyze the data, a script was coded in Python 2.7.4. Extensive use of the open source libraries
 \texttt{numpy} and \texttt{scipy} were used for matrix and numerical manipulation, as well as \texttt{matplotlib} for
-data visualization.
+data visualization and graphical user interface.
 
 Many options for this script are customizable via command line parameters. Appendix \ref{app:codehelp} includes a
 description of all the possible parameters and a quick user guide.
@@ -164,7 +165,7 @@ The selected features were:
 
 \subsubsection{Data pre-processing}
 Text files in both \texttt{arff} and \texttt{txt} formats containing feature information for labeled, soft-labeled,
-and unlabeled data were read into a feature matrix $M$ ($n$ data points $\times m$ features).
+and unlabeled data were read into a feature matrix $\mathbf M$ ($n$ data points $\times m$ features).
 
 The \texttt{arff} files containing \emph{labeled data} were read and loaded into the feature matrix, by filtering the
 read fields to include only the features obtained in the feature selection phase. The possible classes or labels are
@@ -194,27 +195,11 @@ As an outcome of this pre-processing step, the feature matrix containing the val
 for the labeled, soft-labeled, and unlabeled cells (after sampling, when specified) was returned, along with
 the \todo{explain how to construct this}initial label matrix.
 
-%\begin{blockarray}{c}
-%\begin{block}{[cccc][cccc]c\}}
-%	a & b & ... & n & a & b & ... & n &\\
-%	a & b & ... & n & a & b & ... & n & \\
-%	\end{block}
-%\begin{block}{[cccc][cccc]c\}}
-%	a & b & ... & n & a & b & ... & n &\\
-%	a & b & ... & n & a & b & ... & n & \\
-%	\end{block}
-%%\begin{block}{[cccc][cccc]c\}}
-%	a & b & ... & n & a & b & ... & n &\\
-%	a & b & ... & n & a & b & ... & n & \\
-%	\end{block}
-%\end{blockarray}
-%\[
-
 \subsubsection{Data normalization}
 \lipsum[75]
 
 \subsubsection{Graph construction}
-The graph was internally represented by its weight matrix $\mathbf{W}$ ($\mathbf{W}_{ij}>0$ if there exists
+The graph was internally represented by its weight matrix $\mathbf W$ ($\mathbf{W}_{ij}>0$ if there exists
 an edge between the vertices $x_i$ and $x_j$, zero otherwise), plus a $n \times m$ label matrix $Y$ 
 ($n$ cells, $m$ possible labels or classes), with valid values ranging from $0$ to $1$. A value
 of $Y_{i,j}=1$ represents complete confidence that the $i$-th cell in the data set, belongs to the $j$-th
@@ -223,6 +208,9 @@ class, and values of $0.5$ indicate complete uncertainty about class membership.
 
 \subsubsection{Label propagation}
 \textcolor{gray}{\lipsum[44]}
+
+\subsubsection{Hyperparameter optimization}
+\lipsum[33]
 
 \section{Results}
 \textcolor{gray}{\lipsum[8]}

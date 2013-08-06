@@ -14,6 +14,7 @@ import numpy as np
 from numpy import set_printoptions
 # timeit
 import argparse
+from random import seed
 from scipy.spatial.distance import pdist, squareform, euclidean
 from utils import parentdir, get_sample, generate_test_data, get_files, hcs_labels, hcs_soft_labels, \
     hcs_soft_label_alphas, dummy_labels2, dummy_soft_labels, dummy_soft_label_alphas
@@ -98,6 +99,7 @@ def read_arff_file(file_path, feature_list, label_line_prefix='@attribute class 
 
 
 def process_cmdline(argv):
+    global quiet
     '''
     Reads program parameters from the command line and sets default values for missing parameters
     '''
@@ -149,6 +151,7 @@ def process_cmdline(argv):
     class_sampling = args['class_sampling']
     distance_metric = args['distance_metric']
     neighborhood_fn = args['neighborhood_fn']
+    quiet = args['quiet']
     alpha = 0.94
     max_iterations = args['max_iterations']
     set_printoptions(linewidth=args['width'] - 1, nanstr='0', precision=3)
@@ -157,6 +160,11 @@ def process_cmdline(argv):
     return (unlabeled_file_references, soft_labeled_path, labeled_file_references, feature_list,
             soft_labeled_sample_size, unlabeled_sample_size, labeled_sample_size, class_sampling, distance_metric,
             neighborhood_fn, alpha, max_iterations, test)
+
+
+def get_labels(label_array, labels):
+    ordering = np.argmax(label_array, axis=0)
+    return ordering + 1  # np.array([labels[o + 1] for o in ordering])
 
 
 def generate_color_map(label_array, num_labeled, num_soft_labeled, unlabeled_initial_color=None):
@@ -196,7 +204,7 @@ def propagate_labels_SSL(feature_matrix, initial_labels, distance_metric, neighb
     ___("labels: %s" % labels)
     assert initial_labels.shape[1] == len(labels)
     class_prior = np.sum(initial_labels[:num_labeled_points], axis=0) / num_labeled_points
-    print "class prior: %s" % class_prior
+    ___("class prior: %s" % class_prior)
     '''
     Implementation of the label spreading algorithm (Zhou et al., 2004) on a graph, represented by
     its similarity matrix.
@@ -221,7 +229,7 @@ def propagate_labels_SSL(feature_matrix, initial_labels, distance_metric, neighb
         W = squareform(exp_matrix(pairwise))
     elif neighborhood_fn.startswith('knn'):
         k = int(neighborhood_fn[len('knn'):])
-        print "Using %i nearest neighbors" % k
+        ___("Using %i nearest neighbors" % k)
         knns = np.argsort(pairwise_matrix, axis=1)[:, :k + 1]
         W = np.array([[1 if j in knns[i] else 0 for j in range(pairwise_matrix.shape[0])]
                       for i in range(pairwise_matrix.shape[0])])
@@ -310,6 +318,8 @@ def propagate_labels_SSL(feature_matrix, initial_labels, distance_metric, neighb
         pass
         #scat.set_array(labeled_array)
 
+    Y_scaled = Y_t.T.copy()
+
     # Animation frame
     def get_propagated_labels(t):
         if aHandler.animate:
@@ -320,19 +330,21 @@ def propagate_labels_SSL(feature_matrix, initial_labels, distance_metric, neighb
                     Y_new = (Laplacian * Alpha).dot(Y_t[i]) + OneMinusAlpha.dot(Y_0[i])
                     np.copyto(Y_t[i], Y_new)
 
+                # class mass normalization
                 class_prior = np.sum(initial_labels[:num_labeled_points], axis=0) / float(num_labeled_points)
                 class_mass = np.sum(initial_labels[num_labeled_points:], axis=0) / float(initial_labels.shape[0] - num_labeled_points)
                 class_scaling = class_prior / class_mass
-                Y_scaled = class_scaling * Y_t.T
-                #color_map = generate_color_map(np.array(Y_t), num_labeled_points, num_soft_labeled_points)
+                np.copyto(Y_scaled, class_scaling * Y_t.T)
                 color_map = generate_color_map(Y_scaled.T, num_labeled_points, num_soft_labeled_points)
+                #color_map = generate_color_map(np.array(Y_t), num_labeled_points, num_soft_labeled_points)
                 if t == 0:  # display first label assignment
                     scat_orig_unlabeled.set_array(color_map)
                 scat_labeled.set_array(color_map[:num_labeled_points])
                 scat_soft_labeled.set_array(color_map[num_labeled_points: num_labeled_points + num_soft_labeled_points])
                 scat_unlabeled.set_array(color_map[num_labeled_points + num_soft_labeled_points:])
                 header.set_text("Label propagation. Iteration %i" % aHandler.frame)
-                print [euclidean(Y_old[i], Y_t[i]) for i in range(Y_old.shape[0])]
+                ___([euclidean(Y_old[i], Y_t[i]) for i in
+                     range(Y_old.shape[0])])
                 if all([euclidean(Y_old[i], Y_t[i]) < 1e-2 for i in range(Y_old.shape[0])]) or aHandler.frame >= max_iterations:
                     header.set_text("%s %s" % (header.get_text(), "[end]"))
                     aHandler.stop()
@@ -348,11 +360,15 @@ def propagate_labels_SSL(feature_matrix, initial_labels, distance_metric, neighb
 
     bStartPauseAnimation.on_clicked(start_stop)
     plt.show()
-    return None
+    return get_labels(Y_scaled.T, labels)
 
 
-def normalize(M):
-    return (M - np.mean(M, 0)) / np.std(M, 0)
+def normalize(M, class_weights=1):
+    '''
+    Student's t-statistic normalization, by using estimated mean and standard deviation
+    '''
+    assert type(class_weights) is int or type(class_weights) is np.ndarray and np.shape(class_weights)[0] == np.shape(M)[1]
+    return class_weights * (M - np.mean(M, 0)) / np.std(M, 0)
 
 
 def get_label_matrix(label_vector, class_labels):
@@ -440,7 +456,9 @@ def setup_feature_matrix(unlabeled_file_references, soft_labeled_path, labeled_f
 
     if normalize_data:
         # M = np.column_stack([normalize(M), initial_labels])
-        M = normalize(M)
+        scores = np.array([1.3275, 1.1739, 1.0605, 0.9868])
+        weights = np.max(scores) / scores
+        M = normalize(M, weights)
     return (M, initial_labels, alpha_vector, len(labeled_points), len(soft_labeled_points))
 
 
@@ -558,8 +576,7 @@ def main(argv):
         unlabeled_sample_size, labeled_sample_size, class_sampling, distance_metric, neighborhood_fn, alpha, \
         max_iterations, test = process_cmdline(argv)
 
-    # RandomState(7283)
-    # seed(7283)
+    seed(7283)
     labels = hcs_labels
 
     if test:
@@ -577,6 +594,7 @@ def main(argv):
 
     Y = propagate_labels_SSL(M, initial_labels, distance_metric, neighborhood_fn, alpha_vector, max_iterations,
                              labeled_points, soft_labeled_points, labels=labels)
+    print Y
     return Y
 
 
