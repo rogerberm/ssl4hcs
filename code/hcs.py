@@ -124,7 +124,7 @@ def process_cmdline(argv):
     parser.add_argument("-d", "--display-columns", help="Max width used for matrix display on console", type=int,
                         dest='width', default=310)
     parser.add_argument("-nf", "--neighborhood-function", help="Neighborhood function to use. Default: exp",
-                        choices=['exp', 'knn3', 'knn4', 'knn5', 'knn6'], dest='neighborhood_fn', default='exp')
+                        choices=['exp', 'knn3', 'knn4', 'knn5', 'knn6', 'knn7', 'knn8'], dest='neighborhood_fn', default='exp')
     parser.add_argument("-dm", "--distance-metric", help="Metric for pairwise distances. Default: euclidean",
                         choices=['euclidean', 'cityblock', 'cosine', 'sqeuclidean', 'hamming', 'chebyshev'],
                         dest='distance_metric', default='euclidean')
