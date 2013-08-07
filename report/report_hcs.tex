@@ -11,6 +11,9 @@
 \usepackage{blkarray}
 \usepackage{mathpple}
 \usepackage[comma, square, super]{natbib}
+\usepackage{tabularx}
+\usepackage{pdflscape}
+
 \DisableLigatures{encoding = *, family = *}
 \newcommand{\TODO}[1]{\todo[size=\tiny]{#1}}
 \newcommand\imglabel[1]{\textbf{\textsf{#1}}}
@@ -55,11 +58,14 @@ is used. Reliable training of an SML method, however, requires significant effor
 As an alternative, semi-supervised machine learning (SSL) methods make use of information intrinsically found in the 
 entire data, both annotated and unannotated, thus allowing to make use of a larger amount of information
 by exploiting, alongside with the annotated data, the relative distribution of unannotated data on the feature
-space~\cite{chapelle2006semi}.
-This paradigm, under a few assumptions\todo{use footnote with assumptions or just reference to
-publication?}\footnote{Smoothness, Cluster, and Manifold assumptions, see~\cite[p.~4-6]{chapelle2006semi}},
-has proven valuable in exploring and classifying biological data in fields as diverse as drug-protein
-interactions~\cite{zheng2010semi}, gene expression~\cite{costa2007semi}, and \todo{expand this introduction?}medical
+space~\cite{chapelle2006semi}. Furthermore, common sources of error in manually-annotated data (subjective data 
+interpretation by the annotator, instrument capabilities and calibration, noise, ...) can affect the
+quality of the annotations, and in some cases SSL techniques can account for and correct such
+misannotations\cite{du2010error}.
+
+The semi-supervised learning paradigm, under a few assumptions\footnote{Smoothness, Cluster, and Manifold assumptions,
+see~\cite[p.~4-6]{chapelle2006semi}}, has proven valuable in exploring and classifying biological data in fields as
+diverse as drug-protein interactions~\cite{zheng2010semi}, gene expression~\cite{costa2007semi}, and medical
 diagnosis~\cite{bair2004semi}.
 
 \section{Materials and Methods}
@@ -71,18 +77,19 @@ These cell cultures were exposed to a genetically engineered fluorescent SFV str
 green fluorescent protein (GFP) genes, and the corresponding GFP production on all of the cultures was tracked over
 time. 3 repetitions of this experiment were carried out.
 
-The protein expression was stopped at different time points after culture infection with SFV, for all siRNA-mediated
-phenotypes, and microscopic pictures of the sample were obtained under a light microscope. Samples with no exposure
-to SFV were also analyzed as a control experiment, in the exact same manner as for the infected samples.
+The protein expression was stopped at \todo{t=?}$t$ after culture infection with SFV, for all siRNA-mediated
+phenotypes, and microscopic pictures of the sample were obtained under a light microscope.
+Wild-type cultures were also exposed to SFV, and protein expression was stopped at \todo{add list of time points here}
+and analyzed as negative control experiments, in the exact same manner as for the \todo{confirm this term} transfected
+samples.
+
 
 \subsection{Image acquisition and analysis}
 For every sample at each infection stage, 9 tiled images were captured via a light microscope, by composing the
-green fluorescent signal of the produced protein, and a blue-colored image of the nuclei. All images were
-subsequently processed with an automatic \todo{according to G. Balistreri. Confirm. Expand on this?} random
-forest-based segmentation tool to identify individual cells from the images.
+green fluorescent signal of the produced protein, and a blue-colored image of the nuclei.
 
-With the mapping between microscopic pictures and individual image segments representing cells, features for each cell
-were extracted with CellProfiler~\cite{carpenter2006cellprofiler}.
+Image segmentation of all microscopic pictures to identify individual cells, and the subsequent feature extraction per
+identified cell, was done with CellProfiler~\cite{carpenter2006cellprofiler}.
 A total of 93 features were retrieved and used in this experiment, corresponding to color intensity, area, shape, and
 texture descriptors. (For the complete list of features extracted, see Appendix \ref{app:featurelist})
 
@@ -91,7 +98,7 @@ The above process was performed automatically on the \todo{replace with actual n
 images retrieved from the siRNA-mediated phenotypes. All 93 features\footnote{In total, 95 features were extracted
 from the images. Spatial coordinates, however, were regarded as of little, if any value for data analysis in this
 work.} were extracted as floating point values, and stored in text files, one line per cell. Unlabeled information for
-\todo{figure out this number} $M$ cells was collected by this process.
+around 100.000.000 cells was collected by this process.
 
 \subsection{Annotated data}
 From the genome-wide information, a small subset of the data was manually annotated by an expert on SFV infection, by
@@ -119,7 +126,7 @@ complete graph that considers all possible pairwise relationships.
 In the original formulation, labels are associated to the vertices corresponding to annotated data, and neutral labels
 likewise to the unannotated data; then, in an iterative fashion, the labeled vertices propagate along the edges to
 their neighbors' labels, and compete against the propagation of other labeled vertices with a strength proportional to
-their relatedness (edge weight $W$).
+their relatedness (edge weight $\mathbf W$).
 
 In the present implementation, prior knowledge of the nature of the data was incorporated as an additional level of
 \emph{soft labeling}, to exploit the fact that, for data points taken from the experimental control, the cells
@@ -230,41 +237,103 @@ class, and values of $0.5$ indicate complete uncertainty about class membership.
 
 \bibliographystyle{ieeetr}  % orders by occurrence in the document
 \bibliography{references}
+
 \appendix
 \chapter{Features analyzed}\label{app:featurelist}
-\todo{format this}
 \begin{figure}[here]
-\centering
-\begin{tabular}{rl}
-	1:2 & nuclei location\\
+%\centering
 
-	3 & green mean intensity nuclei\\
-	4 & green std intensity nucleii\\
+\begin{tabularx}{300pt}{| rX | rX|}
+	\hline
+	\multicolumn{2}{|c|}{\textbf{Position and intensity}} & \multicolumn{2}{c|}{\textbf{Nuclear shape features}}\\
+	\hline
+	1 & nuclei location $x$ & 11 & Area\\
+	2 & nuclei location $y$ & 12 & Eccentricity\\
 
-	5 & green mean intensity cells\\
-	6 & green std intensity cells\\
+	3 & green mean intensity nuclei & 13 & Solidity\\
+	4 & green std intensity nucleii & 14 & Extent\\
 
-	7 & blue mean intensity nuclei\\
-	8 & blue std intensity nuclei\\
+	5 & green mean intensity cells & 15 & Euler number\\
+	6 & green std intensity cells & 16 & Perimeter\\
 
-	9 & blue mean intensity cells\\
-	10 & blue std intensity cells\\
+	7 & blue mean intensity nuclei & 17 & Form factor\\
+	8 & blue std intensity nuclei & 18 & Major axis length\\
 
+	9 & blue mean intensity cells & 19 & Minor axis length\\
+	10 & blue std intensity cells & 20 & Orientation\\
+	\hline
+\end{tabularx}
+
+\vspace*{0.4cm}
+[Haralick features here]
+
+%\begin{tabularx}{400pt}{|rrrrr|l}
+%	\cline{1-5}
+%	\multicolumn{3}{|c|}{Scale 3} & \multicolumn{2}{c|}{Scale 5}&\\
+%	\cline{1-5}
+%	\multicolumn{2}{|c|}{\textbf{Nuclei texture}} & \textbf{Cell texture} &
+%	\textbf{Nuclei texture} & \textbf{Cell texture} &\\\cline{1-5}
+%	green&blue&green&green&green&\\\cline{1-5}
+%
+%	21&36&51&66&81&Angular second moment\\
+%	22&37&52&67&82&Contrast\\
+%	23&38&53&68&83&Correlation\\
+%	24&39&54&69&84&Variance\\
+%	25&40&55&70&85&Inverse difference moment\\
+%	26&41&56&71&86&Sum average\\
+%	27&42&57&72&87&Sum variance\\ 
+%	28&43&58&73&88&Sum entropy\\
+%	29&44&59&74&89&Entropy\\
+%	30&45&60&75&90&Difference variance\\
+%	31&46&61&76&91&Difference entropy\\
+%	32&47&62&77&92&Info meas 1-2\\
+%	33&48&63&78&93&\\
+%	34&49&64&79&94&Gabor X\&Y\\
+%	35&50&65&80&95&\\
+%	\cline{1-5}
+%\end{tabularx}
+
+%\begin{tabular}{rl}
+%	1:2 & nuclei location\\
+%
+%	3 & green mean intensity nuclei\\
+%	4 & green std intensity nucleii\\
+%
+%	5 & green mean intensity cells\\
+%	6 & green std intensity cells\\
+%
+%	7 & blue mean intensity nuclei\\
+%	8 & blue std intensity nuclei\\
+%
+%	9 & blue mean intensity cells\\
+%	10 & blue std intensity cells\\
+%
 % shape descriptiors
-	11:20 & AreaShape\\
+%	   & \textbf Shape features from the nucleus\\
+%	11 & Area\\
+%	12 & Eccentricity\\
+%	13 & Solidity\\
+%	14 & Extent\\
+%	15 & Euler number\\
+%	16 & Perimeter\\
+%	17 & Form factor\\
+%	18 & Major axis length\\
+%	19 & Minor axis length\\
+%	20 & Orientation\\
 
 
 % texture scale 3
-	21:35 & nuclei texture green\\
-	36:50 & nuclei texture blue\\
-	51:65 & cell texture green\\
+	%21:35 & nuclei texture green\\
+	%36:50 & nuclei texture blue\\
+	%51:65 & cell texture green\\
 
 % texture scale 5
-	66:80 & nuclei texture green\\
-	81:95 & cell texture green
-\end{tabular}
+	%66:80 & nuclei texture green\\
+	%81:95 & cell texture green
+%\end{tabular}
 \end{figure}
-[Table with cell/nuclei intensity, shape and Haralick~\cite{haralick1973textural} texture features...]
+%[Table with cell/nuclei intensity, shape and Haralick~\cite{haralick1973textural} texture features...]
+
 \chapter{Script parameters and help}\label{app:codehelp}
 \small
 \todo{up to date?}
