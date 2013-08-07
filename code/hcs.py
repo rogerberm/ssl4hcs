@@ -413,7 +413,7 @@ def get_label_matrix(label_vector, class_labels):
 
 
 def setup_validation_matrix(labeled_file_references, soft_labeled_path, feature_list,
-                            labeled_sample_size, class_sampling, alpha_labeled,
+                            labeled_sample_size, unlabeled_sample_size, class_sampling, alpha_labeled,
                             alpha_unlabeled, alpha_soft_labeled,
                             class_labels=hcs_soft_labels, ignore_labels=[6],
                             normalize_data=True):
@@ -424,7 +424,7 @@ def setup_validation_matrix(labeled_file_references, soft_labeled_path, feature_
     validation_points = np.concatenate(validation_data)
     np.random.shuffle(validation_points)
     labeled_points = validation_points[:labeled_sample_size]
-    unlabeled_points = validation_points[labeled_sample_size:]
+    unlabeled_points = validation_points[labeled_sample_size:labeled_sample_size + unlabeled_sample_size]
     expected_labels = unlabeled_points[:, -1].copy()
     unlabeled_points[:, -1] = -1
     soft_labeled_sample_size = len(unlabeled_points)
@@ -684,8 +684,8 @@ def main(argv):
                               5: alpha_soft_infected}
         M, initial_labels, alpha_vector, labeled_points, soft_labeled_points, expected_labels = \
             setup_validation_matrix(labeled_file_references, soft_labeled_path, feature_list, labeled_sample_size,
-                                    class_sampling, alpha_labeled, alpha_unlabeled, alpha_soft_labeled,
-                                    ignore_labels=['6'], normalize_data=True)
+                                    unlabeled_sample_size, class_sampling, alpha_labeled, alpha_unlabeled,
+                                    alpha_soft_labeled, ignore_labels=['6'], normalize_data=True)
     else:
         M, initial_labels, alpha_vector, labeled_points, soft_labeled_points = \
             setup_feature_matrix(unlabeled_file_references, soft_labeled_path, labeled_file_references,
