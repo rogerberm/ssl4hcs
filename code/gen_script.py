@@ -33,7 +33,7 @@ def main(cmdline):
     for p in params:
         if p[0] <= p[1] and p[1] < p[2] and p[2] <= p[3]:
             for i in range(4):
-                print "bsub -n 2 -q pub.36h -R \"rusage[mem=2048]\" './hcs.py -l all/labeled/gw*.arff -s all/soft/ -c -f 4 3 2 1 -L 60 -n 240 -v -al %f -au %f -asu %f -asi %f -nf knn%i -q'" % \
+                print "bsub -n 2 -q pub.36h -R \"rusage[mem=2048]\" './hcs.py -l all/labeled/gw*.arff -s all/soft/ -c -f 4 3 2 1 92 53 54 -L 60 -n 240 -v -al %f -au %f -asu %f -asi %f -nf knn%i -q'" % \
                     (p[0], p[1], p[2], p[3], p[4])
 
 

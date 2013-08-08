@@ -186,19 +186,20 @@ data visualization and graphical user interface.
 Many options for this script are customizable via command line parameters. Appendix \ref{app:codehelp} includes a
 description of all the possible parameters and a quick user guide.
 
-\subsubsection{Feature selection}
+\subsubsection{Feature selection and normalization}
 The values for all the features from the annotated cells were analyzed with Weka \cite{hall2009weka}. The InfoGain
-attribute evaluator was used to determine the information gain ratio for each feature, and the \todo{ad-hoc}top~4
-features were chosen as the selected dimensions to represent the data for further analysis.
+attribute evaluator was used to determine the information gain for each feature with respect to each class or label,
+and the \todo{ad-hoc}top~4 features were chosen as the set of selected dimensions $D$ to represent the data for
+further analysis.
 
 Due to the heterogeneity on the range of values between the selected features, spanning 
 several orders of magnitude, normalization of the data was required. A standard z-score normalization was applied on
 all the dimensions. This normalization, however, does not account for the fact that some data dimensions are more
 important than others in terms of information gain. The relative information gain score among the group of
-selected features was used to construct a scaling factor or weight for feature normalization, so that pairwise
-distances over more important dimensions are smaller than distances over less important ones.
+selected features was used to construct a scaling factor or weight $w_d$ for feature normalization, so that
+distances over less important dimensions are less penalized than those over more important ones.
 \begin{equation}
-	w_d = \frac{\max{F}}{F_d}
+	w_d = \frac{IG_d}{\max_{d' \in D} IG_{d'}}
 \end{equation}
 
 The selected features were: 
