@@ -18,6 +18,8 @@
 \newcommand{\TODO}[1]{\todo[size=\tiny]{#1}}
 \newcommand\imglabel[1]{\textbf{\textsf{#1}}}
 \renewcommand{\rmdefault}{ptm}
+\DeclareMathAlphabet\mathbfcal{OMS}{cmsy}{b}{n}
+
 
 \setlrmarginsandblock{2.5cm}{2.5cm}{*}
 \setulmarginsandblock{3cm}{3cm}{*}
@@ -71,7 +73,6 @@ diagnosis~\cite{bair2004semi}.
 \section{Materials and Methods}
 \subsection{High-content screening}
 A human genome-wide siRNA library was used to produce human cell cultures with knocked-out
-\todo{confirm this is correct/well-written, explain this in more detail?}
 genes, stored in a collection of 55 384-well plates spanning the entire genome. 
 These cell cultures were exposed to a genetically engineered fluorescent SFV strand as a transduction vehicle for 
 green fluorescent protein (GFP) genes, and the corresponding GFP production on all of the cultures was tracked over
@@ -79,9 +80,10 @@ time. 3 repetitions of this experiment were carried out.
 
 The protein expression was stopped at \todo{t=?}$t$ after culture infection with SFV, for all siRNA-mediated
 phenotypes, and microscopic pictures of the sample were obtained under a light microscope.
-Wild-type cultures were also exposed to SFV, and protein expression was stopped at \todo{add list of time points here}
-and analyzed as negative control experiments, in the exact same manner as for the \todo{confirm this term} transfected
-samples.
+Wild-type cultures were also exposed to SFV, and protein expression was stopped at 4, 5, 6, and 7 hours after exposure
+and analyzed as negative control experiments, in the exact same manner as for the silenced
+samples. A control sample set for non-exposure to the virus was also collected and analyzed in the same way
+as described above.
 
 
 \subsection{Image acquisition and analysis}
@@ -94,8 +96,9 @@ A total of 93 features were retrieved and used in this experiment, corresponding
 texture descriptors. (For the complete list of features extracted, see Appendix \ref{app:featurelist})
 
 \subsection{Unannotated data}
-The above process was performed automatically on the \todo{replace with actual number} $55 \cdot 384 \cdot 9 \cdot K$
-images retrieved from the siRNA-mediated phenotypes. All 93 features\footnote{In total, 95 features were extracted
+The above process was performed automatically on the 380.160 images (55~plates $\times$ 384~wells $\times$ 
+9~sites $\times$ 2~channels) retrieved from the siRNA-mediated phenotypes.
+All 93 features\footnote{In total, 95 features were extracted
 from the images. Spatial coordinates, however, were regarded as of little, if any value for data analysis in this
 work.} were extracted as floating point values, and stored in text files, one line per cell. Unlabeled information for
 around 100.000.000 cells was collected by this process.
@@ -123,15 +126,50 @@ between the data points in the n-dimensional feature space, in a linear, exponen
 others, and can be either limited in space (k-nearest neighbors, cutoff distance, ...), or consist of a
 complete graph that considers all possible pairwise relationships.
 
-In the original formulation, labels are associated to the vertices corresponding to annotated data, and neutral labels
-likewise to the unannotated data; then, in an iterative fashion, the labeled vertices propagate along the edges to
-their neighbors' labels, and compete against the propagation of other labeled vertices with a strength proportional to
-their relatedness (edge weight $\mathbf W$).
+In the original formulation, a vector of initial labels $\hat{Y}^{(0)}$ is created by assigning the actual labels 
+to the vertices corresponding to annotated data, and neutral labels to the unannotated data; then, in an iterative
+fashion, described in equation~\ref{eq:zhou}, all vertices \emph{learn} the labels from their neighbors at a
+rate $\alpha$ (and preserve their initial labeling at a rate $1-\alpha$). This process is repeated until convergence
+to a $\hat{Y}^{(\infty)}$.
 
-In the present implementation, prior knowledge of the nature of the data was incorporated as an additional level of
-\emph{soft labeling}, to exploit the fact that, for data points taken from the experimental control, the cells
-(vertices) can be tracked back to their experimental conditions and time course, which have a direct influence on what
-specific phenotypes (labels) are more likely to occur.
+\begin{equation}
+	\label{eq:zhou}
+	\hat{Y}^{(t+1)} \leftarrow \alpha \mathbfcal{L}\hat{Y}^{(t)} + (1-\alpha)\hat{Y}^{(0)}
+\end{equation}
+
+% The above formulation resembles an isotropic model of diffusion.
+The \emph{laplacian} term controlling the particular
+strength of label spreading between any two data points is given by
+$\mathbfcal{L} \leftarrow \mathbf{D}^{-1/2}\mathbf{W}\mathbf{D}^{-1/2}$, with $\mathbf{W}$ the
+weight or affinity (distance-related) matrix between nodes in the graph (and $\mathbf{W}_{ii} = 0$), and
+$\mathbf{D}$ the diagonal degree matrix $\mathbf{D}_{ii}~=~\sum_{j}{\mathbf{W}_{ij}}$. 
+
+In the present implementation, the availability of \emph{experimentally supervised data} from the experimental control
+samples was exploited. For each of these samples, the experimental conditions were known (in particular, the time after
+exposure to the virus), and a specific phenotype (label) could therefore be expected. To make use of this information,
+initial labels were assigned not only to the manually-annotated data points, but also to these experimentally
+supervised data points, by using the labels corresponding to their expected infection phase.
+
+The $n$ data points are classified in four types: labeled data,
+experimentally-supervised data with high labeling confidence (data points taken from the uninfected control samples), 
+experimentally-supervised data with standard labeling confidence (data points taken from the infected control
+samples), and unlabeled data, with cardinalities $n_l$, $n_h$, $n_s$, $n_u$ respectively. Different learning rates
+per each type ($\alpha_l$, $\alpha_h$, $\alpha_s$, and $\alpha_u$, respectively) were used to construct a diagonal
+$n \times n$ matrix $\mathbfcal{A}$, such that $\mathbfcal{A}_{ii} \in \left\{ \alpha_l, \alpha_h, \alpha_s,
+\alpha_u \right\}$, according to the class of the data point $i$. The actual values are found by hyperparameter
+optimization (detailed in next sections).
+
+The variant of the label spreading algorithm presented here, uses then the slightly modified (\emph{experimentally
+supervised data}-aware) iterative formula:
+\begin{equation}
+	\hat{Y}^{(t+1)} \leftarrow \mathbfcal{LA}\hat{Y}^{(t)} + (\mathbf{I}-\mathbfcal{A})\hat{Y}^{(0)}
+\end{equation}
+%, but in general, the configuration $\alpha_l \leq \alpha_h < \alpha_s < \alpha_u$ reflects the prior confidence in the data
+
+%In the present implementation, prior knowledge of the nature of the data was incorporated as an additional level of
+%\emph{soft labeling}, to exploit the fact that, for data points taken from the experimental control, the cells
+%(vertices) can be tracked back to their experimental conditions and time course, which have a direct influence on what
+%specific phenotypes (labels) are more likely to occur.
 
 \subsubsection{Development and runtime environment}
 To read and analyze the data, a script was coded in Python 2.7.4. Extensive use of the open source libraries
@@ -143,9 +181,8 @@ description of all the possible parameters and a quick user guide.
 
 \subsubsection{Feature selection}
 The values for all the features from the annotated cells were analyzed with Weka \cite{hall2009weka}. The InfoGain
-attribute evaluator was used to determine the information gain ratio for each feature, and features with a score of
-above \todo{ask: better a top-5 or so than a threshold?} 0.9 were chosen as the selected dimensions to represent
-the data for further analysis.
+attribute evaluator was used to determine the information gain ratio for each feature, and the \todo{ad-hoc}top-4 features
+were chosen as the selected dimensions to represent the data for further analysis.
 
 Due to the heterogeneity on the range of values between the selected features, spanning \todo{how many?}
 several orders of magnitude, normalization of the data was required. The relative

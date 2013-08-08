@@ -202,9 +202,11 @@ class AnimationHandler:
     animate = False
     animation_handler = None
     end = False
+    killed = False
 
     def __init__(self, animation_handler):
         self.end = False
+        self.killed = False
         self.animation_handler = animation_handler
 
     def toggle(self):
@@ -373,6 +375,7 @@ def propagate_labels_SSL(feature_matrix, initial_labels, distance_metric, neighb
                         header.set_text("%s %s" % (header.get_text(), "[end]"))
                     aHandler.stop()
             except KeyboardInterrupt:
+                aHandler.killed = True
                 aHandler.stop()
                 return
 
@@ -391,7 +394,7 @@ def propagate_labels_SSL(feature_matrix, initial_labels, distance_metric, neighb
         aHandler.animate = True
         while(not aHandler.end):
             get_propagated_labels(0)
-    return get_labels(Y_scaled.T, labels)
+    return get_labels(Y_scaled.T, labels), aHandler.frame, not aHandler.killed
 
 
 def normalize(M, class_weights=1):
@@ -694,8 +697,8 @@ def main(argv):
                                  class_sampling, alpha_labeled=0.1, alpha_unlabeled=0.9, ignore_labels=['6'],
                                  num_labels=len(labels), normalize_data=True)
 
-    Y = propagate_labels_SSL(M, initial_labels, distance_metric, neighborhood_fn, alpha_vector, max_iterations,
-                             labeled_points, soft_labeled_points, labels=labels, use_gui=use_gui)
+    Y, iterations, finished = propagate_labels_SSL(M, initial_labels, distance_metric, neighborhood_fn, alpha_vector, max_iterations,
+                                                   labeled_points, soft_labeled_points, labels=labels, use_gui=use_gui)
     if validation and type(expected_labels) is np.ndarray:
         Y_unlabeled = Y[-len(expected_labels):]
         accuracy = np.sum(Y_unlabeled == expected_labels) / (1. * len(expected_labels))
@@ -703,9 +706,10 @@ def main(argv):
                                (1. * np.sum(Y_unlabeled == label)) for label in np.unique(Y_unlabeled)}
         classwise_recall = {label: np.sum(np.all([expected_labels == label, expected_labels == Y_unlabeled], axis=0)) /
                             (1. * np.sum(expected_labels == label)) for label in np.unique(Y_unlabeled)}
-        print "a-labeled, %f, a-unlabeled, %f, a-soft-uninf, %f, a-soft-inf, %f, nf, %s, accuracy, %f, precision, %s, recall, %s" % \
+        print "a-labeled, %f, a-unlabeled, %f, a-soft-uninf, %f, a-soft-inf, %f, nf, %s, \
+accuracy, %f, precision, %s, recall, %s, iterations, %i, finished, %s" % \
             (alpha_labeled, alpha_unlabeled, alpha_soft_uninfected, alpha_soft_infected, neighborhood_fn,
-             accuracy, classwise_precision, classwise_recall)
+             accuracy, classwise_precision, classwise_recall, iterations, "yes" if finished else "no")
     return Y
 
 
