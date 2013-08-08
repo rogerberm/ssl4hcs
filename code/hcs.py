@@ -14,7 +14,7 @@ import numpy as np
 from numpy import set_printoptions
 # timeit
 import argparse
-from random import seed
+#from random import seed
 from scipy.spatial.distance import pdist, squareform, euclidean
 from utils import parentdir, get_sample, generate_test_data, get_files, hcs_labels, hcs_soft_labels, \
     hcs_soft_label_alphas, dummy_labels2, dummy_soft_labels, dummy_soft_label_alphas
@@ -673,7 +673,7 @@ def main(argv):
         alpha_unlabeled, alpha_soft_uninfected, alpha_soft_infected, max_iterations, test, \
         validation, use_gui = process_cmdline(argv)
 
-    seed(7283)
+    #seed(7283)
     labels = hcs_labels
     expected_labels = None
 
