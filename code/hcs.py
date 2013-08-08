@@ -401,7 +401,9 @@ def normalize(M, class_weights=1):
     '''
     Student's t-statistic normalization, by using estimated mean and standard deviation
     '''
-    assert type(class_weights) is int or type(class_weights) is np.ndarray and np.shape(class_weights)[0] == np.shape(M)[1]
+    assert type(class_weights) is int or type(class_weights) is np.ndarray and np.shape(class_weights)[0] >= np.shape(M)[1]
+    if type(class_weights) is np.ndarray:
+        class_weights = class_weights[:M.shape[1]]
     return class_weights * (M - np.mean(M, 0)) / np.std(M, 0)
 
 
@@ -467,8 +469,9 @@ def setup_validation_matrix(labeled_file_references, soft_labeled_path, feature_
 
     if normalize_data:
         # M = np.column_stack([normalize(M), initial_labels])
-        scores = np.array([1.3275, 1.1739, 1.0605, 0.9868])
-        weights = np.max(scores) / scores
+        # 4,3,2,1,92,53,54
+        scores = np.array([1.3384, 1.0987, 1.0309, 0.9315, 0.9133, 0.9064, 0.8906])
+        weights = scores / np.max(scores)
         M = normalize(M, weights)
 
     return (M, initial_labels, alpha_vector, len(labeled_points), len(soft_labeled_points), expected_labels)

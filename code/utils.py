@@ -92,3 +92,8 @@ def generate_test_data():
     return (unlabeled_file_references, soft_labeled_path, labeled_file_references, feature_list,
             soft_labeled_sample_size, unlabeled_sample_size, labeled_sample_size, class_sampling, distance_metric,
             neighborhood_function, alpha, max_iterations)
+
+
+# weka cmdline
+#
+#java -classpath weka.jar weka.attributeSelection.InfoGainAttributeEval -i ~/lab/ssl4hcs/code/all/gwAll.arff -s "weka.attributeSelection.Ranker -N 7"
