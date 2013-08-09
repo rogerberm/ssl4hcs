@@ -709,6 +709,8 @@ def main(argv):
                                (1. * np.sum(Y_unlabeled == label)) for label in np.unique(Y_unlabeled)}
         classwise_recall = {label: np.sum(np.all([expected_labels == label, expected_labels == Y_unlabeled], axis=0)) /
                             (1. * np.sum(expected_labels == label)) for label in np.unique(Y_unlabeled)}
+        summary = {label: [np.sum(np.all([expected_labels == label, Y_unlabeled == somelabel], axis=0)) for somelabel in labels] for label in labels}
+        print summary
         print "a-labeled, %f, a-unlabeled, %f, a-soft-uninf, %f, a-soft-inf, %f, nf, %s, \
 accuracy, %f, precision, %s, recall, %s, iterations, %i, finished, %s" % \
             (alpha_labeled, alpha_unlabeled, alpha_soft_uninfected, alpha_soft_infected, neighborhood_fn,

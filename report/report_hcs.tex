@@ -251,7 +251,7 @@ soft-labeled data, and the files are expected in differents directories within, 
 The \texttt{txt} files containing \emph{unlabeled data} were read exactly as described above for the soft-labeled
 data. A default neutral label was assigned to all entries read from this files.
 
-Due to the massive amount of information, and for ease of testing, sampling parameters over the labeled, 
+Due to the large amount of information, and for ease of testing, sampling parameters over the labeled, 
 soft-labeled and unlabeled data were implemented. The command-line parameter \texttt{-{}-num-labeled}
 controls how many labeled data points to use as training data. The parameter \texttt{-{}-num-samples N} controls
 how many data points to use from both soft-labeled and unlabeled data together ($N/2$ each). An additional flag
@@ -294,7 +294,17 @@ the $\mathbfcal A$ matrix encoding the learning rates was derived from the mappi
 and the class-wise learning rates.
 
 The implemented version of the label propagation algorithm was run up to a number of maximum iterations or
-convergence to a steady state labeling vector $\hat{Y}^{(\infty)}$.
+convergence to a steady state $m$-dimensional labeling vector $\hat{Y}^{(\infty)}$ (with $m$ the number of possible
+classes or labels. Each entry on this vector represents a data point, and contains the values spread by the
+neighbors' labels.
+
+The intuitive idea of annotating each data point with the label associated to the highest
+value on this vector (highest combination of the original labeling and the neighbors' labeling) does not consider
+the prior class distribution of the data (i.e. since the values are the sum of individual contributions from 
+the neighbors, labels with a smaller relative frequency can not compete against more frequently-occurring labels
+in a fair way). To account for this, \emph{class mass normalization} was also applied on the labeling vector, prior
+to deciding on the actual classification, by scaling each class (column) by the estimated class distribution.
+The actual labeling for each data point $i$, after normalization, is then given by $argmax_k\ \hat{Y}_{ik}$.
 
 In a standard labeling run, the estimated $\hat{Y}^{(\infty)}$ is then returned to the user.
 
@@ -326,13 +336,13 @@ partitions, were:
 \end{table}
 
 \section{Results}
-\textcolor{gray}{\lipsum[8]}
+\textcolor{gray}{\lipsum[83]}
 
 \section{Discussion}
-\textcolor{gray}{\lipsum[9]}
+\textcolor{gray}{\lipsum[87]}
 
 \section{Conclusions}
-\textcolor{gray}{\lipsum[3]}
+\textcolor{gray}{\lipsum[89]}
 
 %labeled and unlabeled datasources
 %	\item[Tools] weka, numpy, scipy
