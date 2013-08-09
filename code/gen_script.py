@@ -28,7 +28,6 @@ def main(cmdline):
     alpha_unlabeled_grid = grid[3].flatten()
     knn_grid = grid[4].flatten()
     params = zip(alpha_labeled_grid, alpha_soft_uninf_grid, alpha_soft_inf_grid, alpha_unlabeled_grid, knn_grid)
-    print params
     np.set_printoptions(precision=5)
 
     for p in params:

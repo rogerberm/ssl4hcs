@@ -13,6 +13,8 @@
 \usepackage[comma, square, super]{natbib}
 \usepackage{tabularx}
 \usepackage{pdflscape}
+\usepackage{chngcntr}
+
 
 \DisableLigatures{encoding = *, family = *}
 \newcommand{\TODO}[1]{\todo[size=\tiny]{#1}}
@@ -21,9 +23,12 @@
 \DeclareMathAlphabet\mathbfcal{OMS}{cmsy}{b}{n}
 
 
-\setlrmarginsandblock{2.5cm}{2.5cm}{*}
+\setlrmarginsandblock{3cm}{3cm}{*}
 \setulmarginsandblock{3cm}{3cm}{*}
 \checkandfixthelayout
+\counterwithout{figure}{chapter}
+\counterwithout{table}{chapter}
+
 
 \title{
 	Semi-supervised learning for phenotypic profiling of \mbox{high-content screens\ifdraft{ (DRAFT)}{\thanks{This
@@ -107,7 +112,7 @@ around 100.000.000 cells was collected by this process.
 From the genome-wide information, a small subset of the data was manually annotated by an expert on SFV infection, by
 visually identifying cell phenotypes directly from the segmented microscopic images and cross-checking with the time
 annotation on the respective source plate, and classifying them into the different stages of infection. This manual
-point-and-click process yielded \todo{software reference for this?} 3098 annotated cells.\footnote{A small number of
+\todo{software reference for this?} point-and-click process yielded 3098 annotated cells.\footnote{A small number of
 imaging artifacts were also identified manually. However, accounting for such information was out of the scope of
 this work.}
 
@@ -140,7 +145,12 @@ to a $\hat{Y}^{(\infty)}$.
 % The above formulation resembles an isotropic model of diffusion.
 The \emph{laplacian} term controlling the particular
 strength of label spreading between any two data points is given by
-$\mathbfcal{L} \leftarrow \mathbf{D}^{-1/2}\mathbf{W}\mathbf{D}^{-1/2}$, with $\mathbf{W}$ the
+
+\begin{equation}
+\label{eq:laplacian}
+\mathbfcal{L} \leftarrow \mathbf{D}^{-\frac 1 2}\mathbf{W}\mathbf{D}^{-\frac 1 2}
+\end{equation}
+with $\mathbf{W}$ the
 weight or affinity (distance-related) matrix between nodes in the graph (and $\mathbf{W}_{ii} = 0$), and
 $\mathbf{D}$ the diagonal degree matrix $\mathbf{D}_{ii}~=~\sum_{j}{\mathbf{W}_{ij}}$. 
 
@@ -165,18 +175,12 @@ supervised data}-aware) iterative formula:
 	\hat{Y}^{(t+1)} \leftarrow \mathbfcal{LA}\hat{Y}^{(t)} + (\mathbf{I}-\mathbfcal{A})\hat{Y}^{(0)}
 \end{equation}
 
-The label spreading algorithm:
-1. Read the $n \times f$ feature matrix $\mathbf{M}$ containing the $f$ selected feature values for all
-$n = n_l + n_h + n_s + n_u$ data points.
-2. Compute the affinity matrix $\textbf{W}$ from the pairwise distances between all data points in $M$
-3. Create the initial label vector $\hat{Y}^{(0)}$ from all $n$ points, according to their type.
-4. 
-%, but in general, the configuration $\alpha_l \leq \alpha_h < \alpha_s < \alpha_u$ reflects the prior confidence in the data
-
-%In the present implementation, prior knowledge of the nature of the data was incorporated as an additional level of
-%\emph{soft labeling}, to exploit the fact that, for data points taken from the experimental control, the cells
-%(vertices) can be tracked back to their experimental conditions and time course, which have a direct influence on what
-%specific phenotypes (labels) are more likely to occur.
+%The label spreading algorithm:
+%1. Read the $n \times f$ feature matrix $\mathbf{M}$ containing the $f$ selected feature values for all
+%$n = n_l + n_h + n_s + n_u$ data points.
+%2. Compute the affinity matrix $\textbf{W}$ from the pairwise distances between all data points in $M$
+%3. Create the initial label vector $\hat{Y}^{(0)}$ from all $n$ points, according to their type.
+%4. 
 
 \subsubsection{Development and runtime environment}
 To read and analyze the data, a script was coded in Python 2.7.4. Extensive use of the open source libraries
@@ -188,9 +192,9 @@ description of all the possible parameters and a quick user guide.
 
 \subsubsection{Feature selection and normalization}
 The values for all the features from the annotated cells were analyzed with Weka \cite{hall2009weka}. The InfoGain
-attribute evaluator was used to determine the information gain for each feature with respect to each class or label,
-and the \todo{ad-hoc}top~4 features were chosen as the set of selected dimensions $D$ to represent the data for
-further analysis.
+attribute evaluator was used to determine the information gain $IG$ for each dimension (feature) with respect to
+each class or label, and the \todo{ad-hoc}top~7 features were chosen as the set of selected dimensions $D$ to
+represent the data for further analysis.
 
 Due to the heterogeneity on the range of values between the selected features, spanning 
 several orders of magnitude, normalization of the data was required. A standard z-score normalization was applied on
@@ -202,26 +206,32 @@ distances over less important dimensions are less penalized than those over more
 	w_d = \frac{IG_d}{\max_{d' \in D} IG_{d'}}
 \end{equation}
 
-The selected features were: 
+Afterwards, the values over all z-score normalized dimensions were rescaled to their respective $w_d$.
 
-\begin{figure}[here]
+The selected features, and their respective information gain score and weight, were: 
+
+\begin{table}[here]
 \centering
 \begin{tabular}{rlrr}
-	ID & Description & Score & Weight\\
 	\hline
-	4 & Standard deviation of green intensities (whole cell) & 1.3275 & 1\\
-	3 & Mean of green intensities (whole cell) & 1.1739 & 0.8843\\
-	2 & Standard deviation of green intensities (nuclei) & 1.0605 & 0.7989\\
-	1 & Mean of green intensities (nuclei) & 0.9868 & 0.7434\\
-	92 & Information measure of correlation (scale 5, whole cell)? & 0.9288 & 0.6997\\
-    53 & Correlation (scale 3, whole cell)? & 0.9241 & 0.6961\\
-	93 & Maximal correlation coefficient (scale 5, whole cell) & 0.9081 & 0.6841
+	ID & Description & $IG_d$ score & Weight $w_d$ \\
+	\hline
+	4 & Standard deviation of green intensities (whole cell) & 1.3384 & 1.0000\\
+	3 & Mean of green intensities (whole cell) & 1.0987 & 0.8209\\
+	2 & Standard deviation of green intensities (nuclei) & 1.0309 & 0.7702\\
+	1 & Mean of green intensities (nuclei) & 0.9315 & 0.6960\\
+	92 & Gabor X (texture scale 5, whole cell) & 0.9133 & 0.6824\\
+    53 & Inverse difference moment (texture scale 3, whole cell) & 0.9064 & 0.6772\\
+	54 & Sum average (texture scale 5, whole cell) & 0.8906 & 0.6654\\
+	\hline
 \end{tabular}
-\end{figure}
+\caption{Selected features, information gain score, and relative weight}
+\end{table}
 
 \subsubsection{Data pre-processing}
-Text files in both \texttt{arff} and \texttt{txt} formats containing feature information for labeled, soft-labeled,
-and unlabeled data were read into a feature matrix $\mathbf M$ ($n$ data points $\times m$ features).
+Text files in both \texttt{arff} and \texttt{txt} formats containing feature information for labeled, experimentally
+supervised ("soft-labeled"), and unlabeled data were read into a feature matrix $\mathbf M$ ($n$ data points
+$\times m$ features).
 
 The \texttt{arff} files containing \emph{labeled data} were read and loaded into the feature matrix, by filtering the
 read fields to include only the features obtained in the feature selection phase. The possible classes or labels are
@@ -229,7 +239,7 @@ loaded from the \texttt{arf{}f} file by parsing the line starting with \texttt{@
 overriden via the \texttt{-{}-label-line-prefix} parameter in the command line). As a parameter to the program, a list
 of ignored labels can be also passed with the option \texttt{-{}-ignored-labels}. Data points annotated with any of
 these label identifiers will be left out of the feature matrix. No further sampling was performed over the labeled
-data, i.e. all remaining (non-ignored) data points were kept.
+data at this point, i.e. all remaining (non-ignored) data points were kept.
 
 The \texttt{txt} files containing \emph{soft-labeled data} were read a similar way, except there was no need for
 parsing any formatting of the files. Each line in these \texttt{txt} files corresponds to a cell, and contains the
@@ -241,32 +251,79 @@ soft-labeled data, and the files are expected in differents directories within, 
 The \texttt{txt} files containing \emph{unlabeled data} were read exactly as described above for the soft-labeled
 data. A default neutral label was assigned to all entries read from this files.
 
-Due to the massive amount of information, sampling parameters over the soft-labeled and unlabeled data were
-implemented. The command-line parameter \texttt{-{}-num-samples N} controls how many data points to use from both
-soft-labeled and unlabeled data together ($N/2$ each). An additional flag parameter \texttt{-{}-class-sampling}
-indicates that the script must sample the soft-labeled data uniformly over classes, to avoid sampling bias due to
-large differences between the number of data points on each class.
+Due to the massive amount of information, and for ease of testing, sampling parameters over the labeled, 
+soft-labeled and unlabeled data were implemented. The command-line parameter \texttt{-{}-num-labeled}
+controls how many labeled data points to use as training data. The parameter \texttt{-{}-num-samples N} controls
+how many data points to use from both soft-labeled and unlabeled data together ($N/2$ each). An additional flag
+parameter \texttt{-{}-class-sampling} indicates that the script must sample the soft-labeled data uniformly over
+classes, to avoid sampling bias due to large differences between the number of data points on each class.
 
-As an outcome of this pre-processing step, the feature matrix containing the values of the selected features
-for the labeled, soft-labeled, and unlabeled cells (after sampling, when specified) was returned, along with
-the \todo{explain how to construct this}initial label matrix.
-
-\subsubsection{Data normalization}
-\lipsum[75]
+As an outcome of this pre-processing step, the feature matrix $\mathbf{M}$ containing the values of the selected
+features for the labeled, soft-labeled, and unlabeled cells (after sampling, when specified) was returned, along with
+the initial label matrix $\hat{Y}^{(0)}$.
 
 \subsubsection{Graph construction}
 The graph was internally represented by its weight matrix $\mathbf W$ ($\mathbf{W}_{ij}>0$ if there exists
-an edge between the vertices $x_i$ and $x_j$, zero otherwise), plus a $n \times m$ label matrix $Y$ 
-($n$ cells, $m$ possible labels or classes), with valid values ranging from $0$ to $1$. A value
-of $Y_{i,j}=1$ represents complete confidence that the $i$-th cell in the data set, belongs to the $j$-th
-phenotypic class of cells. Likewise, a value of $0$ indicates absolute disbelief that a cell corresponds to a
-class, and values of $0.5$ indicate complete uncertainty about class membership.
+an edge between the vertices $x_i$ and $x_j$, zero otherwise), plus a $n \times m$ label matrix $\mathbf Y$ 
+($n$ cells, $m$ possible labels or classes), with valid values ranging from $0$ to $1$.
+
+To construct $\mathbf{W}$, pairwise distances between all data points in $\mathbf{M}$ were calculated (the 
+distance metric to use is customizable via command line, see Appendix \ref{app:codehelp} for possible values), and a
+neighbor weight function was applied over this distances. The following neighbor weight functions were implemented:
+\begin{description}
+	\item[Exponential weight:] $\mathbf{W}_{ij} = e^{-dist(p_i,p_j)}$ (complete graph)
+		%As the distance between two data points increases, the edge strength (weight) between
+		%them decreases exponentially as $e^{-dist(p, p')}$
+		%for all possible pairs $(p,p')$ (complete graph)
+	\item[$k$-nearest neighbors:] $\mathbf{W}_{ij} = 1$ if $p_j$ is one of the $k$ data points closest
+		to $p_i$, 0 otherwise. (graph max degree $k$)
+\end{description}
+
+In the label matrix $\mathbf Y$, each column represents a possible class label. A value of $\mathbf{Y}_{i,j}=1$
+represents complete confidence that the $i$-th cell in the data set belongs to the $j$-th phenotypic class of cells.
+Likewise, a value of $0$ indicates absolute confidence that a cell does \emph{not} correspond to a class, and
+values of $0.5$ indicate complete uncertainty about class membership. To encode the initial labels in $\mathbf Y$,
+the rows corresponding to both labeled and "soft-labeled" data were one-hot encoded (a value of 1 for the column
+corresponding to their initial label, 0 elsewhere), whereas for the unlabeled data a value of 0.5 was used on
+all label columns.
+
 
 \subsubsection{Label propagation}
-\textcolor{gray}{\lipsum[44]}
+The laplacian matrix $\mathbfcal{L}$ was obtained from $\mathbf W$, as indicated in equation \ref{eq:laplacian}, and
+the $\mathbfcal A$ matrix encoding the learning rates was derived from the mappings between the initial labels
+and the class-wise learning rates.
+
+The implemented version of the label propagation algorithm was run up to a number of maximum iterations or
+convergence to a steady state labeling vector $\hat{Y}^{(\infty)}$.
+
+In a standard labeling run, the estimated $\hat{Y}^{(\infty)}$ is then returned to the user.
 
 \subsubsection{Hyperparameter optimization}
-\lipsum[33]
+To evaluate the performance of the script under different hyperparameter configurations, evaluation on a held-out
+validation set was used, by partitioning the labeled data into a small set of training data points and a larger set
+of validation points (on a 1:2 ratio). Grid search was used to explore a discretization of the parameter space and
+identify hyperparameter configurations that yielded the best classification results in terms of accuracy (i.e. correct 
+identification of the virtually hidden labels from the validation points).
+
+The ranges for the discrete partitions were decided \todo{should we mention this in the report?} arbitrarily, but
+exploiting some rough intuition of their possible values. The hyperparameters optimized, and their discrete
+partitions, were:
+\begin{table}[here]
+	\label{tbl:hyper}
+	\centering
+	\begin{tabular}{ll}
+		\hline
+		Hyperparameter & Discrete partitions\\
+		\hline
+		$\alpha_l$ & \{0.05, 0.10, 0.15, 0.20, 0.25\}\\
+		$\alpha_h$ & \{0.00, 0.10, 0.20, 0.30\}\\
+		$\alpha_s$ & \{0.30, 0.40, 0.50, 0.60, 0.70\}\\
+		$\alpha_u$ & \{0.50, 0.60, 0.70, 0.80, 0.90\}\\
+		$k$-nn & \{4, 5, 6, 7, 8, 9\}\\
+		\hline
+	\end{tabular}
+	\caption{Hyperparameters and discrete partitions for grid search}
+\end{table}
 
 \section{Results}
 \textcolor{gray}{\lipsum[8]}
