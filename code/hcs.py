@@ -673,7 +673,7 @@ def main(argv):
         alpha_unlabeled, alpha_soft_uninfected, alpha_soft_infected, max_iterations, test, \
         validation, use_gui = process_cmdline(argv)
 
-    #seed(7283)
+    seed(7283)
     labels = hcs_labels
     expected_labels = None
 
@@ -710,7 +710,11 @@ def main(argv):
         classwise_recall = {label: np.sum(np.all([expected_labels == label, expected_labels == Y_unlabeled], axis=0)) /
                             (1. * np.sum(expected_labels == label)) for label in np.unique(Y_unlabeled)}
         summary = {label: [np.sum(np.all([expected_labels == label, Y_unlabeled == somelabel], axis=0)) for somelabel in labels] for label in labels}
+        summary2 = {label: [np.sum(np.all([expected_labels == label, Y_unlabeled == somelabel], axis=0)) /
+                            (1. * np.sum(expected_labels == somelabel)) for somelabel in labels] for label in labels}
         print summary
+        print [np.sum(expected_labels == label) for label in labels]
+        print summary2
         print "a-labeled, %f, a-unlabeled, %f, a-soft-uninf, %f, a-soft-inf, %f, nf, %s, \
 accuracy, %f, precision, %s, recall, %s, iterations, %i, finished, %s" % \
             (alpha_labeled, alpha_unlabeled, alpha_soft_uninfected, alpha_soft_infected, neighborhood_fn,
