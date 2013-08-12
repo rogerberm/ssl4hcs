@@ -302,22 +302,23 @@ The intuitive idea of annotating each data point with the label associated to th
 value on this vector (highest combination of the original labeling and the neighbors' labeling) does not consider
 the prior class distribution of the data (i.e. since the values are the sum of individual contributions from 
 the neighbors, labels with a smaller relative frequency can not compete against more frequently-occurring labels
-in a fair way). To account for this, \emph{class mass normalization} was also applied on the labeling vector, prior
-to deciding on the actual classification, by scaling each class (column) by the estimated class distribution.
-The actual labeling for each data point $i$, after normalization, is then given by $argmax_k\ \hat{Y}_{ik}$.
+in a fair way). To account for this, \emph{class mass normalization}\cite{zhu2003semi} was also applied on the
+labeling vector, prior to deciding on the actual classification, by scaling each class (column) by the estimated
+class distribution. The actual labeling for each data point $i$, after normalization, is then given
+by $argmax_k\ \hat{Y}_{ik}$.
 
 In a standard labeling run, the estimated $\hat{Y}^{(\infty)}$ is then returned to the user.
 
 \subsubsection{Hyperparameter optimization}
 To evaluate the performance of the script under different hyperparameter configurations, evaluation on a held-out
-validation set was used, by partitioning the labeled data into a small set of training data points and a larger set
+validation set was used. The labeled data was split into a small set of training data points and a larger set
 of validation points (on a 1:2 ratio). Grid search was used to explore a discretization of the parameter space and
 identify hyperparameter configurations that yielded the best classification results in terms of accuracy (i.e. correct 
 identification of the virtually hidden labels from the validation points).
 
 The ranges for the discrete partitions were decided \todo{should we mention this in the report?} arbitrarily, but
-exploiting some rough intuition of their possible values. The hyperparameters optimized, and their discrete
-partitions, were:
+exploiting some rough intuition of their possible values to constraint the subset of the discretized hyperparameter
+space to explore. The hyperparameters to be optimized, and their discrete partitions, were:
 \begin{table}[here]
 	\label{tbl:hyper}
 	\centering
@@ -344,11 +345,6 @@ partitions, were:
 \section{Conclusions}
 \textcolor{gray}{\lipsum[89]}
 
-%labeled and unlabeled datasources
-%	\item[Tools] weka, numpy, scipy
-%	\item[methods] label spreading
-%\end{description}
-
 \nocite{duda2001pattern}
 
 \bibliographystyle{ieeetr}  % orders by occurrence in the document
@@ -357,11 +353,12 @@ partitions, were:
 \appendix
 \chapter{Features analyzed}\label{app:featurelist}
 \begin{figure}[here]
-%\centering
+\footnotesize
+\centering
 
-\begin{tabularx}{300pt}{| rX | rX|}
+\begin{tabularx}{300pt}{| rX | rX |}
 	\hline
-	\multicolumn{2}{|c|}{\textbf{Position and intensity}} & \multicolumn{2}{c|}{\textbf{Nuclear shape features}}\\
+	\multicolumn{2}{|c}{\textbf{Position and intensity}} & \multicolumn{2}{|c|}{\textbf{Nuclear shape features}}\\
 	\hline
 	1 & nuclei location $x$ & 11 & Area\\
 	2 & nuclei location $y$ & 12 & Eccentricity\\
@@ -377,78 +374,63 @@ partitions, were:
 
 	9 & blue mean intensity cells & 19 & Minor axis length\\
 	10 & blue std intensity cells & 20 & Orientation\\
+	\hline	
+\end{tabularx}
+
+\vspace{0.5cm}
+
+\begin{tabularx}{\textwidth}{|rX|rX|rX|}
+	\multicolumn{6}{c}{Texture features (Scale 3)}\\
+	\hline
+	\multicolumn{2}{|c|}{\textbf{Nuclei texture (green)}} &
+	\multicolumn{2}{c|}{\textbf{Nuclei texture (blue)}} &
+	\multicolumn{2}{c|}{\textbf{Cell texture (green)}}\\
+	\hline
+	21 & Angular 2nd moment & 			36 & Angular 2nd moment & 			51 & Angular 2nd moment \\
+	22 & Contrast & 					37 & Contrast & 					52 & Contrast \\
+	23 & Correlation & 					38 & Correlation & 					53 & Correlation \\
+	24 & Variance & 					39 & Variance & 					54 & Variance \\
+	25 & Inverse difference moment & 	40 & Inverse difference moment & 	55 & Inverse difference moment \\
+	26 & Sum average & 					41 & Sum average & 					56 & Sum average \\
+	27 & Sum variance & 				42 & Sum variance & 				57 & Sum variance \\
+	28 & Sum entropy & 					43 & Sum entropy & 					58 & Sum entropy \\
+	29 & Entropy & i					44 & Entropy & 						59 & Entropy \\
+	30 & Difference variance & 			45 & Difference variance & 			60 & Difference variance \\
+	31 & Difference entropy & 			46 & Difference entropy & 			61 & Difference entropy \\
+	32 & Info measurement 1 & 			47 & Info measurement 1 & 			62 & Info measurement 1 \\
+	33 & Info measurement 2 & 			48 & Info measurement 2 & 			63 & Info measurement 2 \\
+	34 & Gabor X & 						49 & Gabor X & 						64 & Gabor X \\
+	35 & Gabor Y & 						50 & Gabor Y & 						65 & Gabor Y \\
 	\hline
 \end{tabularx}
 
-\vspace*{0.4cm}
-[Haralick features here]
+\vspace{0.5cm}
 
-%\begin{tabularx}{400pt}{|rrrrr|l}
-%	\cline{1-5}
-%	\multicolumn{3}{|c|}{Scale 3} & \multicolumn{2}{c|}{Scale 5}&\\
-%	\cline{1-5}
-%	\multicolumn{2}{|c|}{\textbf{Nuclei texture}} & \textbf{Cell texture} &
-%	\textbf{Nuclei texture} & \textbf{Cell texture} &\\\cline{1-5}
-%	green&blue&green&green&green&\\\cline{1-5}
-%
-%	21&36&51&66&81&Angular second moment\\
-%	22&37&52&67&82&Contrast\\
-%	23&38&53&68&83&Correlation\\
-%	24&39&54&69&84&Variance\\
-%	25&40&55&70&85&Inverse difference moment\\
-%	26&41&56&71&86&Sum average\\
-%	27&42&57&72&87&Sum variance\\ 
-%	28&43&58&73&88&Sum entropy\\
-%	29&44&59&74&89&Entropy\\
-%	30&45&60&75&90&Difference variance\\
-%	31&46&61&76&91&Difference entropy\\
-%	32&47&62&77&92&Info meas 1-2\\
-%	33&48&63&78&93&\\
-%	34&49&64&79&94&Gabor X\&Y\\
-%	35&50&65&80&95&\\
-%	\cline{1-5}
-%\end{tabularx}
+\begin{tabularx}{300pt}{|rX|rX|}
+	\multicolumn{4}{c}{Texture features (Scale 5)}\\
+	\hline
+	\multicolumn{2}{|c|}{\textbf{Nuclei texture (green)}} &
+	\multicolumn{2}{c|}{\textbf{Cell texture (green)}}\\
+	\hline
+	66 & Angular 2nd moment & 			81 & Angular 2nd moment \\
+	67 & Contrast & 					82 & Contrast \\
+	68 & Correlation & 					83 & Correlation \\
+	69 & Variance & 					84 & Variance \\
+	70 & Inverse difference moment & 	85 & Inverse difference moment \\
+	71 & Sum average & 					86 & Sum average \\
+	72 & Sum variance & 				87 & Sum variance \\
+	73 & Sum entropy & 					88 & Sum entropy \\
+	74 & Entropy & i					89 & Entropy \\
+	75 & Difference variance & 			90 & Difference variance \\
+	76 & Difference entropy & 			91 & Difference entropy \\
+	77 & Info measurement 1 & 			92 & Info measurement 1 \\
+	78 & Info measurement 2 & 			93 & Info measurement 2 \\
+	79 & Gabor X & 						94 & Gabor X \\
+	80 & Gabor Y & 						95 & Gabor Y \\
+	\hline
+\end{tabularx}
 
-%\begin{tabular}{rl}
-%	1:2 & nuclei location\\
-%
-%	3 & green mean intensity nuclei\\
-%	4 & green std intensity nucleii\\
-%
-%	5 & green mean intensity cells\\
-%	6 & green std intensity cells\\
-%
-%	7 & blue mean intensity nuclei\\
-%	8 & blue std intensity nuclei\\
-%
-%	9 & blue mean intensity cells\\
-%	10 & blue std intensity cells\\
-%
-% shape descriptiors
-%	   & \textbf Shape features from the nucleus\\
-%	11 & Area\\
-%	12 & Eccentricity\\
-%	13 & Solidity\\
-%	14 & Extent\\
-%	15 & Euler number\\
-%	16 & Perimeter\\
-%	17 & Form factor\\
-%	18 & Major axis length\\
-%	19 & Minor axis length\\
-%	20 & Orientation\\
-
-
-% texture scale 3
-	%21:35 & nuclei texture green\\
-	%36:50 & nuclei texture blue\\
-	%51:65 & cell texture green\\
-
-% texture scale 5
-	%66:80 & nuclei texture green\\
-	%81:95 & cell texture green
-%\end{tabular}
 \end{figure}
-%[Table with cell/nuclei intensity, shape and Haralick~\cite{haralick1973textural} texture features...]
 
 \chapter{Script parameters and help}\label{app:codehelp}
 \small

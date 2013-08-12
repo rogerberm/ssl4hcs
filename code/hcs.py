@@ -12,7 +12,7 @@ import sys
 from math import exp
 import numpy as np
 from numpy import set_printoptions
-# timeit
+#import timeit
 import argparse
 from random import seed
 from scipy.spatial.distance import pdist, squareform, euclidean
@@ -368,9 +368,8 @@ def propagate_labels_SSL(feature_matrix, initial_labels, distance_metric, neighb
                     scat_soft_labeled.set_array(color_map[num_labeled_points: num_labeled_points + num_soft_labeled_points])
                     scat_unlabeled.set_array(color_map[num_labeled_points + num_soft_labeled_points:])
                     header.set_text("Label propagation. Iteration %i" % aHandler.frame)
-                ___([euclidean(Y_old[i], Y_t[i]) for i in
-                     range(Y_old.shape[0])])
-                if all([euclidean(Y_old[i], Y_t[i]) < 1e-2 for i in range(Y_old.shape[0])]) or aHandler.frame >= max_iterations:
+                ___([euclidean(Y_old[i], Y_t[i]) for i in range(Y_old.shape[0])])
+                if all([euclidean(Y_old[i], Y_t[i]) < 0.03 for i in range(Y_old.shape[0])]) or aHandler.frame >= max_iterations:
                     if use_gui:
                         header.set_text("%s %s" % (header.get_text(), "[end]"))
                     aHandler.stop()
@@ -703,6 +702,7 @@ def main(argv):
     Y, iterations, finished = propagate_labels_SSL(M, initial_labels, distance_metric, neighborhood_fn, alpha_vector, max_iterations,
                                                    labeled_points, soft_labeled_points, labels=labels, use_gui=use_gui)
     if validation and type(expected_labels) is np.ndarray:
+        set_printoptions(precision=5)
         Y_unlabeled = Y[-len(expected_labels):]
         accuracy = np.sum(Y_unlabeled == expected_labels) / (1. * len(expected_labels))
         classwise_precision = {label: np.sum(np.all([expected_labels == label, expected_labels == Y_unlabeled], axis=0)) /
@@ -710,12 +710,11 @@ def main(argv):
         classwise_recall = {label: np.sum(np.all([expected_labels == label, expected_labels == Y_unlabeled], axis=0)) /
                             (1. * np.sum(expected_labels == label)) for label in np.unique(Y_unlabeled)}
         summary = {label: [np.sum(np.all([expected_labels == label, Y_unlabeled == somelabel], axis=0)) for somelabel in labels] for label in labels}
-        summary2 = {label: [np.sum(np.all([expected_labels == label, Y_unlabeled == somelabel], axis=0)) /
-                            (1. * np.sum(expected_labels == somelabel)) for somelabel in labels] for label in labels}
-        print summary
-        print [np.sum(expected_labels == label) for label in labels]
+        summary2 = {label: np.array([np.sum(np.all([expected_labels == truelabel, Y_unlabeled == label], axis=0)) /
+                                    (1. * np.sum(expected_labels == truelabel)) for truelabel in labels]) for label in labels}
+        print summary, [np.sum(expected_labels == label) for label in labels]
         print summary2
-        print "a-labeled, %f, a-unlabeled, %f, a-soft-uninf, %f, a-soft-inf, %f, nf, %s, \
+        print "a-labeled, %1.4f, a-unlabeled, %1.4f, a-soft-uninf, %1.4f, a-soft-inf, %1.4f, nf, %s, \
 accuracy, %f, precision, %s, recall, %s, iterations, %i, finished, %s" % \
             (alpha_labeled, alpha_unlabeled, alpha_soft_uninfected, alpha_soft_infected, neighborhood_fn,
              accuracy, classwise_precision, classwise_recall, iterations, "yes" if finished else "no")

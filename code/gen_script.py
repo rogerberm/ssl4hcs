@@ -15,11 +15,11 @@ def r(arr):
 
 
 def main(cmdline):
-    alpha_labeled = r(np.linspace(0.00, 0.20, 5))
-    alpha_soft_uninf = r(np.linspace(0, 0.3, 4))
-    alpha_soft_inf = r(np.linspace(0.3, 0.7, 5))
-    alpha_unlabeled = r(np.linspace(0.5, 0.9, 5))
-    knn = r(np.arange(4, 10))
+    alpha_labeled = r(np.linspace(0.00, 0.25, 6))
+    alpha_soft_uninf = r(np.linspace(0, 1, 11))
+    alpha_soft_inf = r(np.linspace(0, 1, 11))
+    alpha_unlabeled = r(np.linspace(0.4, 1, 7))
+    knn = r(np.arange(7, 8))
 
 #    alpha_labeled = r(np.linspace(0.05, 0.25, 5))
 #    alpha_soft_uninf = r(np.linspace(0, 0.3, 4))
@@ -36,13 +36,13 @@ def main(cmdline):
     params = zip(alpha_labeled_grid, alpha_soft_uninf_grid, alpha_soft_inf_grid, alpha_unlabeled_grid, knn_grid)
     np.set_printoptions(precision=3)
 
-    num_labeled = 60
+    num_labeled = 250
 
     for p in params:
         #if p[0] <= p[1] and p[1] < p[2] and p[2] <= p[3]:
         if True:
-            for i in range(4):
-                print "bsub -n 2 -q pub.36h -R \"rusage[mem=2048]\" './hcs.py -l all/labeled/gw*.arff -s all/soft/ -c \
+            for i in range(1):
+                print "bsub -n 1 -R \"rusage[mem=1024]\" './hcs.py -l all/labeled/gw*.arff -s all/soft/ -c \
 -f 4 3 2 1 92 53 54 -L %i -n %i -v -al %f -asu %f -asi %f -au %f -nf knn%i -q'" % \
                     (num_labeled, 4 * num_labeled, p[0], p[1], p[2], p[3], p[4])
 
