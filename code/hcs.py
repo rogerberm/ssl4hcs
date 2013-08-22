@@ -421,12 +421,14 @@ def get_label_matrix(label_vector, class_labels, summary,
             # TODO: implement this
             alpha = alpha_soft_uninf if i < num_labeled + num_soft_labeled_uninf else alpha_soft_inf
 
-            label_matrix[i] = (m - 1) * alpha / m
-            label_matrix[i, label_vector[i] - 1] = alpha / m + (1 - alpha)
+            label_matrix[i] = 1. / (m + 1 - alpha)
+            label_matrix[i, label_vector[i] - 1] = 1 - (m - 1) / (m + 1 - alpha)
             #label_matrix[i] = alpha / 2
             #label_matrix[i, label_vector[i] - 1] = (2 - alpha) / 2.
         else:
             label_matrix[i, :] += 1. / m
+    set_printoptions(precision=10)
+    print label_matrix
     return label_matrix
 
 
@@ -479,13 +481,9 @@ def setup_validation_matrix(labeled_file_references, soft_labeled_path, feature_
             #soft_labeled_data = [get_sample(np.concatenate(soft_labeled_set), class_sample_size[soft_labeled_set_name])
             #                     for soft_labeled_set_name, soft_labeled_set in soft_labeled_data.iteritems()]
             summary['nsu'] = class_sample_size[uninf_label_key]
-            print summary['nsu']
             soft_labeled_data = [get_sample(np.concatenate(soft_labeled_data_uninf), class_sample_size[uninf_label_key])] + \
                                 [get_sample(np.concatenate(soft_labeled_set), class_sample_size[soft_labeled_set_name])
                                  for soft_labeled_set_name, soft_labeled_set in soft_labeled_data.iteritems() if len(soft_labeled_set)>0]
-            print sum([len(adata) for adata in soft_labeled_data])
-            #print soft_labeled_data
-            #sys.exit(0)
         else:
             summary['nsu'] = len(soft_labeled_data_uninf)
             soft_labeled_data = np.concatenate([soft_labeled_data_uninf,np.concatenate(soft_labeled_data.values())])
@@ -503,7 +501,7 @@ def setup_validation_matrix(labeled_file_references, soft_labeled_path, feature_
 
         '''must check consistent ordering
         '''
-    set_printoptions(edgeitems=55000, linewidth=180)
+    #set_printoptions(edgeitems=55000, linewidth=180)
     initial_labels = get_label_matrix(M[:, -1], class_labels, summary,
                                       alpha_soft_labeled[1], alpha_soft_labeled[2])
     M = M[:, :-1]
