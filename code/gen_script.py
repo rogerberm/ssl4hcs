@@ -15,10 +15,10 @@ def r(arr):
 
 
 def main(cmdline):
-    alpha_labeled = r(np.linspace(0.00, 0.25, 6))
-    alpha_soft_uninf = r(np.linspace(0, 1, 11))
-    alpha_soft_inf = r(np.linspace(0, 1, 11))
-    alpha_unlabeled = r(np.linspace(0.4, 1, 7))
+    alpha_labeled = r(np.linspace(0.05, 0.25, 6))
+    alpha_soft_uninf = r(np.linspace(0.02, 0.98, 13))
+    alpha_soft_inf = r(np.linspace(0.02, 0.98, 13))
+    alpha_unlabeled = r(np.linspace(0.4, 0.98, 9))
     knn = r(np.arange(7, 8))
 
 #    alpha_labeled = r(np.linspace(0.05, 0.25, 5))

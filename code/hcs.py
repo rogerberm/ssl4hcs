@@ -12,7 +12,6 @@ import sys
 from math import exp
 import numpy as np
 from numpy import set_printoptions
-#import timeit
 import argparse
 from random import seed
 from scipy.spatial.distance import pdist, squareform, euclidean
@@ -369,7 +368,7 @@ def propagate_labels_SSL(feature_matrix, initial_labels, distance_metric, neighb
                     scat_unlabeled.set_array(color_map[num_labeled_points + num_soft_labeled_points:])
                     header.set_text("Label propagation. Iteration %i" % aHandler.frame)
                 ___([euclidean(Y_old[i], Y_t[i]) for i in range(Y_old.shape[0])])
-                if all([euclidean(Y_old[i], Y_t[i]) < 0.03 for i in range(Y_old.shape[0])]) or aHandler.frame >= max_iterations:
+                if all([euclidean(Y_old[i], Y_t[i]) < 0.025 for i in range(Y_old.shape[0])]) or aHandler.frame >= max_iterations:
                     if use_gui:
                         header.set_text("%s %s" % (header.get_text(), "[end]"))
                     aHandler.stop()
@@ -406,13 +405,28 @@ def normalize(M, class_weights=1):
     return class_weights * (M - np.mean(M, 0)) / np.std(M, 0)
 
 
-def get_label_matrix(label_vector, class_labels):
+def get_label_matrix(label_vector, class_labels, summary,
+                     alpha_soft_uninf, alpha_soft_inf):
+    '''
+    Assumes ordering labeled, soft_uninfected, soft_infected, unlabeled
+    '''
+    num_labeled, num_soft_labeled_uninf, num_soft_labeled_inf = summary['nl'], summary['nsu'], summary['nsi']
+
     label_matrix = np.zeros([len(label_vector), len(class_labels)])
+    m = len(class_labels)
     for i in range(len(label_vector)):
-        if label_vector[i] == -1:
-            label_matrix[i, :] += 0.5
-        else:
+        if i < num_labeled:
             label_matrix[i, label_vector[i] - 1] = 1
+        elif i < num_labeled + num_soft_labeled_uninf + num_soft_labeled_inf:
+            # TODO: implement this
+            alpha = alpha_soft_uninf if i < num_labeled + num_soft_labeled_uninf else alpha_soft_inf
+
+            label_matrix[i] = (m - 1) * alpha / m
+            label_matrix[i, label_vector[i] - 1] = alpha / m + (1 - alpha)
+            #label_matrix[i] = alpha / 2
+            #label_matrix[i, label_vector[i] - 1] = (2 - alpha) / 2.
+        else:
+            label_matrix[i, :] += 1. / m
     return label_matrix
 
 
@@ -422,36 +436,56 @@ def setup_validation_matrix(labeled_file_references, soft_labeled_path, feature_
                             class_labels=hcs_soft_labels, ignore_labels=[6],
                             normalize_data=True):
     alpha_vector = []
+    summary = {'nl': 0, 'nsu': 0, 'nsi': 0, 'nu':0}
 
+    # read labeled data
     validation_data = [read_arff_file(input_file, feature_list, ignore_labels=ignore_labels)
                        for input_file in labeled_file_references]
     validation_points = np.concatenate(validation_data)
     np.random.shuffle(validation_points)
+    # split labeled data in labeled points...
     labeled_points = validation_points[:labeled_sample_size]
+    summary['nl'] = len(labeled_points)
+    # ...and (virtually) unlabeled points
     unlabeled_points = validation_points[labeled_sample_size:labeled_sample_size + unlabeled_sample_size]
+    summary['nu'] = len(unlabeled_points)
     expected_labels = unlabeled_points[:, -1].copy()
     unlabeled_points[:, -1] = -1
     soft_labeled_sample_size = len(unlabeled_points)
 
     alpha_vector += [alpha_labeled] * len(labeled_points)
 
+    #read soft-labeled data
     soft_labeled_points = None
     if soft_labeled_path:
         soft_labeled_data = {label_key: [] for label_key in class_labels.keys()}
         soft_labeled_file_references = get_files(soft_labeled_path)
+
+        uninf_label_key = 'bPEGI-29'
+        soft_labeled_data_uninf = []
+
         for input_file in soft_labeled_file_references:
             label_key = parentdir(input_file)
-            soft_labeled_data[label_key] += [read_hcs_file(input_file, feature_list, soft_label=class_labels[label_key])]
+            if label_key == uninf_label_key:
+                soft_labeled_data_uninf += [read_hcs_file(input_file, feature_list, soft_label=class_labels[label_key])]
+            else:
+                soft_labeled_data[label_key] += [read_hcs_file(input_file, feature_list, soft_label=class_labels[label_key])]
         # Sample unlabeled data uniformly over classes
         if class_sampling:
             class_sample_boundaries = np.rint(np.linspace(0, soft_labeled_sample_size, len(class_labels) + 1))
             class_sample_sizes = class_sample_boundaries[1:] - class_sample_boundaries[:-1]
             i = iter(class_sample_sizes)
             class_sample_size = {class_label: int(i.next()) for class_label in class_labels.keys()}
-            soft_labeled_data = [get_sample(np.concatenate(soft_labeled_set), class_sample_size[soft_labeled_set_name])
-                                 for soft_labeled_set_name, soft_labeled_set in soft_labeled_data.iteritems()]
+            #soft_labeled_data = [get_sample(np.concatenate(soft_labeled_set), class_sample_size[soft_labeled_set_name])
+            #                     for soft_labeled_set_name, soft_labeled_set in soft_labeled_data.iteritems()]
+            summary['nsu'] = class_sample_size[uninf_label_key]
+            soft_labeled_data = [get_sample(np.concatenate(soft_labeled_data_uninf), class_sample_size[uninf_label_key])] + \
+                                [get_sample(np.concatenate(soft_labeled_set), class_sample_size[soft_labeled_set_name])
+                                 for soft_labeled_set_name, soft_labeled_set in soft_labeled_data.iteritems() if len(soft_labeled_set)>0]
         else:
-            soft_labeled_data = np.concatenate(soft_labeled_data.values())
+            summary['nsu'] = len(soft_labeled_data_uninf)
+            soft_labeled_data = np.concatenate([soft_labeled_data_uninf,np.concatenate(soft_labeled_data.values())])
+        summary['nsi'] = len(soft_labeled_data) - summary['nsu']
         soft_labeled_points = np.concatenate(soft_labeled_data)
         soft_labeled_alphas = [alpha_soft_labeled[label] for label in soft_labeled_points[:, -1]]
         alpha_vector += soft_labeled_alphas
@@ -463,7 +497,10 @@ def setup_validation_matrix(labeled_file_references, soft_labeled_path, feature_
     else:
         M = np.concatenate([labeled_points, soft_labeled_points, unlabeled_points])
 
-    initial_labels = get_label_matrix(M[:, -1], class_labels)
+        '''must check consistent ordering
+        '''
+    initial_labels = get_label_matrix(M[:, -1], class_labels, summary,
+                                      alpha_soft_labeled[1], alpha_soft_labeled[2])
     M = M[:, :-1]
 
     if normalize_data:
@@ -503,12 +540,14 @@ def setup_feature_matrix(unlabeled_file_references, soft_labeled_path, labeled_f
     #alpha_labeled, alpha_unlabeled = 0.95, 0.95
     #alpha_soft_labeled = {1: 0.95, 5: 0.95}
     alpha_vector = []
+    summary = {'nl': 0, 'nsu': 0, 'nsi': 0, 'nu':0}
 
     labeled_data = [read_arff_file(input_file, feature_list, ignore_labels=ignore_labels)
                     for input_file in labeled_file_references]
     labeled_points = np.concatenate(labeled_data)
     labeled_points = get_sample(labeled_points, labeled_sample_size)  # ???
     ___("%i labeled points:\n\t%s" % (len(labeled_points), labeled_points[:, -1]))
+    summary['nl'] = len(labeled_points)
 
     alpha_vector += [alpha_labeled] * len(labeled_points)
 
@@ -516,17 +555,32 @@ def setup_feature_matrix(unlabeled_file_references, soft_labeled_path, labeled_f
     if soft_labeled_path:
         soft_labeled_data = {label_key: [] for label_key in class_labels.keys()}
         soft_labeled_file_references = get_files(soft_labeled_path)
+
+        uninf_label_key = 'bPEGI-29'
+        soft_labeled_data_uninf = []
+
         for input_file in soft_labeled_file_references:
             label_key = parentdir(input_file)
-            soft_labeled_data[label_key] += [read_hcs_file(input_file, feature_list, soft_label=class_labels[label_key])]
+            #soft_labeled_data[label_key] += [read_hcs_file(input_file, feature_list, soft_label=class_labels[label_key])]
+            if label_key == uninf_label_key:
+                soft_labeled_data_uninf += [read_hcs_file(input_file, feature_list, soft_label=class_labels[label_key])]
+            else:
+                soft_labeled_data[label_key] += [read_hcs_file(input_file, feature_list, soft_label=class_labels[label_key])]
         # Sample unlabeled data uniformly over classes
         if class_sampling:
             class_sample_size = {class_label: soft_labeled_sample_size / len(class_labels) if class_sampling else -1
                                  for class_label in class_labels.keys()}
-            soft_labeled_data = [get_sample(np.concatenate(soft_labeled_set), class_sample_size[soft_labeled_set_name])
-                                 for soft_labeled_set_name, soft_labeled_set in soft_labeled_data.iteritems()]
+            summary['nsu'] = class_sample_size[uninf_label_key]
+            soft_labeled_data = [get_sample(np.concatenate(soft_labeled_data_uninf), class_sample_size[uninf_label_key])] + \
+                                [get_sample(np.concatenate(soft_labeled_set), class_sample_size[soft_labeled_set_name])
+                                 for soft_labeled_set_name, soft_labeled_set in soft_labeled_data.iteritems() if len(soft_labeled_set)>0]
+            #soft_labeled_data = [get_sample(np.concatenate(soft_labeled_set), class_sample_size[soft_labeled_set_name])
+            #                     for soft_labeled_set_name, soft_labeled_set in soft_labeled_data.iteritems()]
         else:
-            soft_labeled_data = np.concatenate(soft_labeled_data.values())
+            summary['nsu'] = len(soft_labeled_data_uninf)
+            soft_labeled_data = np.concatenate([soft_labeled_data_uninf,np.concatenate(soft_labeled_data.values())])
+            #soft_labeled_data = np.concatenate(soft_labeled_data.values())
+        summary['nsi'] = len(soft_labeled_data) - summary['nsu']
         soft_labeled_points = np.concatenate(soft_labeled_data)
         soft_labeled_alphas = [alpha_soft_labeled[label] for label in soft_labeled_points[:, -1]]
         ___("%i soft labeled points:\n\t%s" % (len(soft_labeled_points), soft_labeled_points[:, -1]))
@@ -537,6 +591,7 @@ def setup_feature_matrix(unlabeled_file_references, soft_labeled_path, labeled_f
 
     unlabeled_points = get_sample(unlabeled_points, unlabeled_sample_size)  # ???
     ___("%i unlabeled points:\n\t%s" % (len(unlabeled_points), unlabeled_points[:, -1]))
+    summary['nu'] = len(unlabeled_points)
 
     alpha_vector += [alpha_unlabeled] * len(unlabeled_points)
 
@@ -546,7 +601,8 @@ def setup_feature_matrix(unlabeled_file_references, soft_labeled_path, labeled_f
     else:
         M = np.concatenate([labeled_points, soft_labeled_points, unlabeled_points])
 
-    initial_labels = get_label_matrix(M[:, -1], class_labels)
+    initial_labels = get_label_matrix(M[:, -1], class_labels, summary,
+                                      alpha_soft_labeled[1], alpha_soft_labeled[2])
     M = M[:, :-1]
 
     if normalize_data:
