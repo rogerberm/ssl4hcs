@@ -479,13 +479,17 @@ def setup_validation_matrix(labeled_file_references, soft_labeled_path, feature_
             #soft_labeled_data = [get_sample(np.concatenate(soft_labeled_set), class_sample_size[soft_labeled_set_name])
             #                     for soft_labeled_set_name, soft_labeled_set in soft_labeled_data.iteritems()]
             summary['nsu'] = class_sample_size[uninf_label_key]
+            print summary['nsu']
             soft_labeled_data = [get_sample(np.concatenate(soft_labeled_data_uninf), class_sample_size[uninf_label_key])] + \
                                 [get_sample(np.concatenate(soft_labeled_set), class_sample_size[soft_labeled_set_name])
                                  for soft_labeled_set_name, soft_labeled_set in soft_labeled_data.iteritems() if len(soft_labeled_set)>0]
+            print sum([len(adata) for adata in soft_labeled_data])
+            #print soft_labeled_data
+            #sys.exit(0)
         else:
             summary['nsu'] = len(soft_labeled_data_uninf)
             soft_labeled_data = np.concatenate([soft_labeled_data_uninf,np.concatenate(soft_labeled_data.values())])
-        summary['nsi'] = len(soft_labeled_data) - summary['nsu']
+        summary['nsi'] = sum([len(_data) for _data in soft_labeled_data])- summary['nsu']
         soft_labeled_points = np.concatenate(soft_labeled_data)
         soft_labeled_alphas = [alpha_soft_labeled[label] for label in soft_labeled_points[:, -1]]
         alpha_vector += soft_labeled_alphas
@@ -499,6 +503,7 @@ def setup_validation_matrix(labeled_file_references, soft_labeled_path, feature_
 
         '''must check consistent ordering
         '''
+    set_printoptions(edgeitems=55000, linewidth=180)
     initial_labels = get_label_matrix(M[:, -1], class_labels, summary,
                                       alpha_soft_labeled[1], alpha_soft_labeled[2])
     M = M[:, :-1]
