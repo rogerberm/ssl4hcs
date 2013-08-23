@@ -368,7 +368,7 @@ def propagate_labels_SSL(feature_matrix, initial_labels, distance_metric, neighb
                     scat_unlabeled.set_array(color_map[num_labeled_points + num_soft_labeled_points:])
                     header.set_text("Label propagation. Iteration %i" % aHandler.frame)
                 ___([euclidean(Y_old[i], Y_t[i]) for i in range(Y_old.shape[0])])
-                if all([euclidean(Y_old[i], Y_t[i]) < 0.025 for i in range(Y_old.shape[0])]) or aHandler.frame >= max_iterations:
+                if all([euclidean(Y_old[i], Y_t[i]) < 0.022 for i in range(Y_old.shape[0])]) or aHandler.frame >= max_iterations:
                     if use_gui:
                         header.set_text("%s %s" % (header.get_text(), "[end]"))
                     aHandler.stop()
@@ -731,7 +731,7 @@ def main(argv):
         alpha_unlabeled, alpha_soft_uninfected, alpha_soft_infected, max_iterations, test, \
         validation, use_gui = process_cmdline(argv)
 
-    seed(7283)
+    #seed(7283)
     labels = hcs_labels
     expected_labels = None
 
