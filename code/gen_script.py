@@ -25,6 +25,7 @@ def process_cmdline(cmdline):
     parser.add_argument("-r", "--reference", help="Reference configuration (array)", type=float, default=None, nargs='+')
     parser.add_argument("-m", "--memory", help="Per-job memory requested to the cluster. Default: 1024", type=int, default=1024)
     parser.add_argument("-c", "--cpus", help="Per-job cpus requested to the cluster. Default: 1", type=int, default=1)
+    parser.add_argument("-p", "--prefix", help="output file prefix", default='')
     params = vars(parser.parse_args())
     return params
 
@@ -44,6 +45,7 @@ def main(cmdline):
     queue = params['queue']
     memory = params['memory']
     cpus = params['cpus']
+    prefix = params['prefix']
 
     '''
     Reduced space (dense)
@@ -111,13 +113,14 @@ def main(cmdline):
         #if p[0] <= p[1] and p[1] < p[2] and p[2] <= p[3]:
         if True:
             for i in range(num_repetitions):
-                print "bsub -n {cpus} -q {queue} -R \"rusage[mem={memory}]\" './hcs.py -l all/labeled/gw*.arff -s all/soft/ -c \
+                print "bsub -n {cpus} -q {queue} -R \"rusage[mem={memory}]\" -J r{num_labeled}x{num_repetitions} \
+-o {prefix}r{num_labeled}x{num_repetitions}_%J './hcs.py -l all/labeled/gw*.arff -s all/soft/ -c \
 -f 4 3 2 1 92 53 54 -L {num_labeled} -n {num_unlabeled_and_soft} -v -al {alpha_labeled:0.4f} -au {alpha_unlabeled:0.4f} \
 -asu {alpha_soft_uninf:0.4f} -asi {alpha_soft_inf:0.4f} -nf knn{knn} -q'".format(cpus=cpus, queue=queue, memory=memory,
                                                                                  num_labeled=num_labeled, num_unlabeled_and_soft=4 * num_labeled,
                                                                                  alpha_labeled=p[0], alpha_unlabeled=p[1],
                                                                                  alpha_soft_uninf=p[2], alpha_soft_inf=p[3],
-                                                                                 knn=p[4])
+                                                                                 knn=p[4], num_repetitions=num_repetitions, prefix=prefix)
 
 
 if __name__ == "__main__":

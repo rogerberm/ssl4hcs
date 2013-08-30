@@ -432,7 +432,6 @@ def get_label_matrix(label_vector, class_labels, summary,
         else:
             label_matrix[i, :] += 1. / m
     set_printoptions(precision=10)
-    print label_matrix
     return label_matrix
 
 
