@@ -421,8 +421,12 @@ def get_label_matrix(label_vector, class_labels, summary,
             # TODO: implement this
             alpha = alpha_soft_uninf if i < num_labeled + num_soft_labeled_uninf else alpha_soft_inf
 
-            label_matrix[i] = 1. / (m + 1 - alpha)
-            label_matrix[i, label_vector[i] - 1] = 1 - (m - 1) / (m + 1 - alpha)
+            label_matrix[i] = alpha / (alpha * (m - 1.) + 1.)
+            label_matrix[i, label_vector[i] - 1] = 1. / (alpha * (m - 1.) + 1.)
+
+            #label_matrix[i] = 1. / (m + 1 - alpha)
+            #label_matrix[i, label_vector[i] - 1] = 1 - (m - 1) / (m + 1 - alpha)
+
             #label_matrix[i] = alpha / 2
             #label_matrix[i, label_vector[i] - 1] = (2 - alpha) / 2.
         else:
@@ -438,7 +442,7 @@ def setup_validation_matrix(labeled_file_references, soft_labeled_path, feature_
                             class_labels=hcs_soft_labels, ignore_labels=[6],
                             normalize_data=True):
     alpha_vector = []
-    summary = {'nl': 0, 'nsu': 0, 'nsi': 0, 'nu':0}
+    summary = {'nl': 0, 'nsu': 0, 'nsi': 0, 'nu': 0}
 
     # read labeled data
     validation_data = [read_arff_file(input_file, feature_list, ignore_labels=ignore_labels)
@@ -483,11 +487,11 @@ def setup_validation_matrix(labeled_file_references, soft_labeled_path, feature_
             summary['nsu'] = class_sample_size[uninf_label_key]
             soft_labeled_data = [get_sample(np.concatenate(soft_labeled_data_uninf), class_sample_size[uninf_label_key])] + \
                                 [get_sample(np.concatenate(soft_labeled_set), class_sample_size[soft_labeled_set_name])
-                                 for soft_labeled_set_name, soft_labeled_set in soft_labeled_data.iteritems() if len(soft_labeled_set)>0]
+                                 for soft_labeled_set_name, soft_labeled_set in soft_labeled_data.iteritems() if len(soft_labeled_set) > 0]
         else:
             summary['nsu'] = len(soft_labeled_data_uninf)
-            soft_labeled_data = np.concatenate([soft_labeled_data_uninf,np.concatenate(soft_labeled_data.values())])
-        summary['nsi'] = sum([len(_data) for _data in soft_labeled_data])- summary['nsu']
+            soft_labeled_data = np.concatenate([soft_labeled_data_uninf, np.concatenate(soft_labeled_data.values())])
+        summary['nsi'] = sum([len(_data) for _data in soft_labeled_data]) - summary['nsu']
         soft_labeled_points = np.concatenate(soft_labeled_data)
         soft_labeled_alphas = [alpha_soft_labeled[label] for label in soft_labeled_points[:, -1]]
         alpha_vector += soft_labeled_alphas
@@ -543,7 +547,7 @@ def setup_feature_matrix(unlabeled_file_references, soft_labeled_path, labeled_f
     #alpha_labeled, alpha_unlabeled = 0.95, 0.95
     #alpha_soft_labeled = {1: 0.95, 5: 0.95}
     alpha_vector = []
-    summary = {'nl': 0, 'nsu': 0, 'nsi': 0, 'nu':0}
+    summary = {'nl': 0, 'nsu': 0, 'nsi': 0, 'nu': 0}
 
     labeled_data = [read_arff_file(input_file, feature_list, ignore_labels=ignore_labels)
                     for input_file in labeled_file_references]
@@ -576,12 +580,12 @@ def setup_feature_matrix(unlabeled_file_references, soft_labeled_path, labeled_f
             summary['nsu'] = class_sample_size[uninf_label_key]
             soft_labeled_data = [get_sample(np.concatenate(soft_labeled_data_uninf), class_sample_size[uninf_label_key])] + \
                                 [get_sample(np.concatenate(soft_labeled_set), class_sample_size[soft_labeled_set_name])
-                                 for soft_labeled_set_name, soft_labeled_set in soft_labeled_data.iteritems() if len(soft_labeled_set)>0]
+                                 for soft_labeled_set_name, soft_labeled_set in soft_labeled_data.iteritems() if len(soft_labeled_set) > 0]
             #soft_labeled_data = [get_sample(np.concatenate(soft_labeled_set), class_sample_size[soft_labeled_set_name])
             #                     for soft_labeled_set_name, soft_labeled_set in soft_labeled_data.iteritems()]
         else:
             summary['nsu'] = len(soft_labeled_data_uninf)
-            soft_labeled_data = np.concatenate([soft_labeled_data_uninf,np.concatenate(soft_labeled_data.values())])
+            soft_labeled_data = np.concatenate([soft_labeled_data_uninf, np.concatenate(soft_labeled_data.values())])
             #soft_labeled_data = np.concatenate(soft_labeled_data.values())
         summary['nsi'] = len(soft_labeled_data) - summary['nsu']
         soft_labeled_points = np.concatenate(soft_labeled_data)

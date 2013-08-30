@@ -282,12 +282,23 @@ neighbor weight function was applied over this distances. The following neighbor
 
 In the label matrix $\mathbf Y$, each column represents a possible class label. A value of $\mathbf{Y}_{i,j}=1$
 represents complete confidence that the $i$-th cell in the data set belongs to the $j$-th phenotypic class of cells.
-Likewise, a value of $0$ indicates absolute confidence that a cell does \emph{not} correspond to a class, and
-values of $0.5$ indicate complete uncertainty about class membership. To encode the initial labels in $\mathbf Y$,
-the rows corresponding to both labeled and "soft-labeled" data were one-hot encoded (a value of 1 for the column
-corresponding to their initial label, 0 elsewhere), whereas for the unlabeled data a value of 0.5 was used on
+Likewise, a value of $0$ indicates absolute confidence that a cell does \emph{not} correspond to a class, and uniform 
+values of $1/m$ indicate complete uncertainty about class membership. To encode the initial labels in $\mathbf Y$,
+the rows corresponding to \emph{labeled data} were one-hot encoded (a value of 1 for the column
+corresponding to their initial label, 0 elsewhere), whereas for the \emph{unlabeled data} a value of $1/m$ was used on
 all label columns.
 
+For the \emph{experimentally-supervised data}, the learning rate $\alpha$ was also used to initialize the labels.
+A low learning rate means that there is strong belief that the initial labeling is correct, and the extreme values
+of $0$ and $1$ suggest that the data points should behave as fully-annotated and fully-unannotated data, respectively,
+as described above. According to this criterion, the labeling of the experimentally-supervised data is given by
+\begin{equation}
+	\mathbf Y_{i,k}  = \begin{cases}
+		\dfrac{1}{\alpha(m-1)+1} & \text{if } E_i = k \\[1.2em]
+		\dfrac{\alpha}{\alpha(m-1)+1} & \text{otherwise}\\
+	\end{cases}
+\end{equation}
+with $E_i$ the experimentally-assigned label for the data point $i$.
 
 \subsubsection{Label propagation}
 The laplacian matrix $\mathbfcal{L}$ was obtained from $\mathbf W$, as indicated in equation \ref{eq:laplacian}, and
