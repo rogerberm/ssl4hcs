@@ -48,6 +48,13 @@ def main(cmdline):
     prefix = params['prefix']
 
     '''
+    Reduced space 2 (dense)
+    '''
+    alpha_labeled = r(np.linspace(0.005, 0.12, 15))
+    alpha_unlabeled = r(np.linspace(0.005, 0.65, 15))
+    alpha_soft_uninf = r(np.linspace(0.25, 0.88, 15))
+    alpha_soft_inf = r(np.linspace(0.4, 0.88, 15))
+    '''
     Reduced space (dense)
     '''
     '''
@@ -70,10 +77,12 @@ def main(cmdline):
     '''
     original (dense)
     '''
+    '''
     alpha_labeled = r(np.linspace(0.05, 0.25, 15))
     alpha_unlabeled = r(np.linspace(0.4, 0.98, 15))
     alpha_soft_uninf = r(np.linspace(0.02, 0.98, 15))
     alpha_soft_inf = r(np.linspace(0.02, 0.98, 15))
+    '''
     '''
     original
     '''
